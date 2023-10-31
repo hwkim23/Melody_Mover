@@ -39,6 +39,7 @@ dependencies:
   pedometer: ^4.0.1
   # Permission handling package
   permission_handler: ^11.0.1
+  provider: ^6.0.5
 
 dev_dependencies:
   flutter_test:
