@@ -54,10 +54,13 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: BaseAppBar(appBar: AppBar()),
-      body: Center(
+      body: SizedBox (
+        width: width,
+        height: height,
         child: pages.elementAt(context.watch<Store1>().selectedIndex),
       ),
       bottomNavigationBar: const BaseBottomNavigationBar(),

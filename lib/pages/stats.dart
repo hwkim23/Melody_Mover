@@ -10,6 +10,20 @@ class Statistics extends StatefulWidget {
 class _StatisticsState extends State<Statistics> {
   @override
   Widget build(BuildContext context) {
-    return const Text("Stats Page");
+    final width = MediaQuery.of(context).size.width;
+    return Padding(
+      padding: EdgeInsets.only(left: width * 0.05, right: width * 0.05, top: 30),
+      child: Column(
+        children: <Widget>[
+          Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            child: const Align(
+                alignment: Alignment.centerLeft,
+                child: Text("Recent Walks", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
+            ),
+          )
+        ],
+      ),
+    );
   }
 }

@@ -115,42 +115,47 @@ class _WalkingState extends State<Walking> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    return Padding(
-      padding: EdgeInsets.only(left: width * 0.05, right: width * 0.05, top: 30),
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Container(
-            margin: const EdgeInsets.only(bottom: 20),
-            child: const Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Ready to move?", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
+          const Text(
+            'Steps Taken',
+            style: TextStyle(fontSize: 30),
+          ),
+          Text(
+            strStep,
+            style: const TextStyle(fontSize: 60),
+          ),
+          const Divider(
+            height: 100,
+            thickness: 0,
+            color: Colors.white,
+          ),
+          const Text(
+            'Status',
+            style: TextStyle(fontSize: 30),
+          ),
+          Icon(
+            _status == 'walking'
+                ? Icons.directions_walk
+                : _status == 'stopped'
+                ? Icons.accessibility_new
+                : Icons.error,
+            size: 75,
+          ),
+          Center(
+            child: Text(
+              _status,
+              style: _status == 'walking' || _status == 'stopped'
+                  ? const TextStyle(fontSize: 30)
+                  : const TextStyle(fontSize: 20, color: Colors.red),
             ),
           ),
-          Container(
-            height: 400,
-            margin: const EdgeInsets.only(bottom: 20),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10.0)
-            ),
-          ),
-          SizedBox(
-              width: double.infinity,
-              height: 45,
-              child: TextButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                          RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0)
-                          )
-                      )
-                  ),
-                  onPressed: () {
-                    //TODO: Content function
-                  },
-                  child: const Text("Start Session", style: TextStyle(color: Colors.blue)))),
+          FilledButton(
+              onPressed: () {isPressed ? reset() : initPlatformState();},
+              child: isPressed ? const Text("Stop") : const Text("Start")),
+          Text("Time passed: $timePassed, Walking rate per minute: $wpm"),
         ],
       ),
     );
