@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:melody_mover/pages/home.dart';
-import 'package:melody_mover/pages/stats.dart';
 import 'package:melody_mover/store.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
@@ -9,7 +7,7 @@ import 'appbar.dart';
 import 'bottomnavigationbar.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:melody_mover/themedata.dart';
-import 'pages/walk.dart';
+import 'drawer.dart';
 
 void main() async {
   runApp(
@@ -31,16 +29,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  static const List<Widget> pages = <Widget>[
-    Walking(),
-    Home(),
-    Statistics()
-  ];
-
   @override
   void initState() {
     super.initState();
     permission();
+    context.read<Store1>().initialIndex();
   }
 
   Future<void> permission() async {
@@ -58,10 +51,11 @@ class _MyAppState extends State<MyApp> {
     final width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: BaseAppBar(appBar: AppBar()),
+      drawer: const BaseDrawer(),
       body: SizedBox (
         width: width,
         height: height,
-        child: pages.elementAt(context.watch<Store1>().selectedIndex),
+        child: context.watch<Store1>().pages.elementAt(context.watch<Store1>().selectedIndex),
       ),
       bottomNavigationBar: const BaseBottomNavigationBar(),
     );

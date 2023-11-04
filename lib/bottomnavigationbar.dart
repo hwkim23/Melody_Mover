@@ -18,6 +18,8 @@ class _BaseBottomNavigationBarState extends State<BaseBottomNavigationBar> {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       backgroundColor: Colors.white,
+      selectedItemColor: (context.watch<Store1>().selectedIndex != -1) ? Colors.black : Colors.grey,
+      unselectedItemColor: Colors.grey,
       elevation: 10.0,
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
@@ -34,7 +36,7 @@ class _BaseBottomNavigationBarState extends State<BaseBottomNavigationBar> {
           label: 'Stats',
         ),
       ],
-      currentIndex: context.watch<Store1>().selectedIndex, //New
+      currentIndex: (context.watch<Store1>().selectedIndex != -1) ? context.watch<Store1>().selectedIndex : 0, //New
       onTap: onItemTapped
     );
   }

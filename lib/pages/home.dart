@@ -9,6 +9,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
   late TabController _tabController;
+  TextEditingController friendController = TextEditingController();
+  TextEditingController communityController = TextEditingController();
   int currentIndex = 0;
   List<int> items = [3, 5];
 
@@ -18,6 +20,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     _tabController.addListener(() {
       setState(() {
         currentIndex = _tabController.index;
+        if (currentIndex == 0) {
+          friendController = TextEditingController();
+        } else {
+          communityController = TextEditingController();
+        }
       });
     });
     super.initState();
@@ -26,6 +33,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   @override
   void dispose() {
     _tabController.dispose();
+    friendController.dispose();
+    communityController.dispose();
     super.dispose();
   }
 
@@ -40,19 +49,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             SizedBox(
                 width: double.infinity,
                 height: 45,
-                child: TextButton(
-                    style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                            RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0)
-                            )
-                        )
-                    ),
-                    onPressed: () {
-                      //TODO: Content function
-                    },
-                    child: const Text("Create Post +", style: TextStyle(color: Colors.blue)))),
+                child: currentIndex == 0
+                  ? const Text("Friends", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
+                  : const Text("Communities", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
+            ),
             Container(
               height: 45,
               margin: const EdgeInsets.symmetric(vertical: 20),
@@ -64,15 +64,23 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 controller: _tabController,
                 indicator: BoxDecoration(
                     borderRadius: BorderRadius.circular(10.0),
-                    color: Colors.blue
+                    color: Colors.grey
                 ),
                 labelColor: Colors.white,
-                unselectedLabelColor: Colors.blue,
+                unselectedLabelColor: Colors.black,
                 tabs: const [
                   Tab(text: "Friends"),
                   Tab(text: "Community")
                 ],
               ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              width: double.infinity,
+              height: 45,
+              child: currentIndex == 0
+                ? searchBar("Friends", friendController)
+                : searchBar("Communities", communityController),
             ),
             SizedBox(
               height: currentIndex == 0 ? items[currentIndex] * 320.0 : items[currentIndex] * 320.0 + 61,
@@ -125,12 +133,18 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 ]
               ),
             ),
-            /*const SizedBox(
-              height: 100,
-            )*/
           ],
         ),
       ),
     );
   }
+}
+
+Widget searchBar(String title, TextEditingController controller) {
+  return SearchBar(
+    elevation: MaterialStateProperty.all(0),
+    controller: controller,
+    leading: const Icon(Icons.search),
+    hintText: "Search $title",
+  );
 }

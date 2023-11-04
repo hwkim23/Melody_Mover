@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:melody_mover/store.dart';
+import 'package:provider/provider.dart';
 
 class BaseAppBar extends StatelessWidget implements PreferredSizeWidget {
   final AppBar appBar;
@@ -9,26 +11,24 @@ class BaseAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      iconTheme: const IconThemeData(color: Colors.black),
       elevation: 0.0,
       backgroundColor: Colors.transparent,
-      leading: IconButton(
-        onPressed: () {
-          //TODO: Menu function
-        },
-        icon: const Icon(Icons.menu, color: Colors.black)
-      ),
       actions: [
         IconButton(
           onPressed: () {
             //TODO: Search function
           },
-          icon: const Icon(Icons.search, color: Colors.black)),
+          icon: context.watch<Store1>().hasUnread
+            //TODO: Change icon
+            ? const Icon(Icons.notification_add)
+            : const Icon(Icons.notifications)),
         //TODO: Change to round user image button
         IconButton(
             onPressed: () {
               //TODO: Account function
             },
-            icon: const Icon(Icons.account_circle, color: Colors.black)),
+            icon: const Icon(Icons.account_circle)),
       ]
     );
   }
