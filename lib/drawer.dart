@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:melody_mover/main.dart';
 import 'package:melody_mover/pages/cues.dart';
 import 'package:melody_mover/pages/faq.dart';
+import 'package:melody_mover/pages/friendsncommunities.dart';
 import 'package:melody_mover/pages/mymusic.dart';
 import 'package:melody_mover/pages/settings.dart';
-import 'main.dart';
 
 class BaseDrawer extends StatelessWidget {
   const BaseDrawer({super.key});
@@ -26,7 +27,7 @@ class BaseDrawer extends StatelessWidget {
             ListTile(
               title: const Text("Friends and Communities", style: TextStyle(fontSize: 16)),
               onTap: () {
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyApp()));
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const FnC()));
               },
             ),
             ListTile(
@@ -60,6 +61,7 @@ class BaseDrawer extends StatelessWidget {
                   title: const Text("Logout", style: TextStyle(fontSize: 16, decoration: TextDecoration.underline)),
                   onTap: () {
                     //TODO: Logout function
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyApp()));
                   },
                 ),
               ),

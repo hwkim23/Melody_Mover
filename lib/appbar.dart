@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:melody_mover/pages/notifications.dart';
 import 'package:melody_mover/store.dart';
 import 'package:provider/provider.dart';
 
@@ -17,12 +18,12 @@ class BaseAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           onPressed: () {
-            //TODO: Search function
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Notifications()));
           },
           icon: context.watch<Store1>().hasUnread
             //TODO: Change icon
             ? const Icon(Icons.notification_add)
-            : const Icon(Icons.notifications)),
+            : const Icon(Icons.notifications, color: Colors.grey)),
         //TODO: Change to round user image button
         IconButton(
             onPressed: () {

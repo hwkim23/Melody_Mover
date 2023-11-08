@@ -7,7 +7,7 @@ class MyThemeData {
           highlightColor: Colors.blue
         ),
       ),
-      scaffoldBackgroundColor: const Color(0xffF8F8F8),
+      scaffoldBackgroundColor: Colors.white,
     iconTheme: const IconThemeData(
       color: Colors.black
     )

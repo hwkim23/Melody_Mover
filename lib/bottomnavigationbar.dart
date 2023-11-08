@@ -23,8 +23,7 @@ class _BaseBottomNavigationBarState extends State<BaseBottomNavigationBar> {
       elevation: 10.0,
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          //TODO: Replace record icon
-          icon: Icon(Icons.fiber_manual_record),
+          icon: Icon(Icons.radio_button_checked_rounded),
           label: 'Walk',
         ),
         BottomNavigationBarItem(
