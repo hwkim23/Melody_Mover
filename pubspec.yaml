@@ -40,6 +40,11 @@ dependencies:
   # Permission handling package
   permission_handler: ^11.0.1
   provider: ^6.0.5
+  audioplayers: ^5.2.0
+  reliable_interval_timer: ^1.0.2
+  intl: ^0.18.1
+  stop_watch_timer: ^3.0.2
+  geolocator: ^10.1.0
 
 dev_dependencies:
   flutter_test:
@@ -59,7 +64,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/
+    - assets/audio/
   # fonts:
   #   - family: Schyler
   #     fonts:

@@ -19,7 +19,7 @@ class _StatisticsState extends State<Statistics> {
             margin: const EdgeInsets.only(bottom: 20),
             child: const Align(
                 alignment: Alignment.centerLeft,
-                child: Text("Recent Walks", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
+                child: Text("Recent Walks", style: TextStyle(fontSize:37, fontWeight: FontWeight.bold))
             ),
           )
         ],

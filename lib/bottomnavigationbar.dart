@@ -17,8 +17,8 @@ class _BaseBottomNavigationBarState extends State<BaseBottomNavigationBar> {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
-      backgroundColor: Colors.white,
-      selectedItemColor: (context.watch<Store1>().selectedIndex != -1) ? Colors.black : Colors.grey,
+      backgroundColor: const Color(0xff0496FF),
+      selectedItemColor: (context.watch<Store1>().selectedIndex != -1) ? Colors.white : Colors.grey,
       unselectedItemColor: Colors.grey,
       elevation: 10.0,
       items: const <BottomNavigationBarItem>[

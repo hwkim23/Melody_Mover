@@ -64,8 +64,8 @@ class _FnCState extends State<FnC> with TickerProviderStateMixin {
                     width: double.infinity,
                     height: 45,
                     child: currentIndex == 0
-                        ? const Text("Friends", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
-                        : const Text("Communities", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
+                        ? const Text("Friends", style: TextStyle(fontSize:37, fontWeight: FontWeight.bold))
+                        : const Text("Communities", style: TextStyle(fontSize:37, fontWeight: FontWeight.bold))
                 ),
                 Container(
                   height: 45,

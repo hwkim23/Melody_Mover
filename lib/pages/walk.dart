@@ -1,7 +1,34 @@
 import 'dart:async';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pedometer/pedometer.dart';
+import 'package:reliable_interval_timer/reliable_interval_timer.dart';
+import 'package:stop_watch_timer/stop_watch_timer.dart';
+import 'package:geolocator/geolocator.dart';
+
+const minute = 1000 * 60;
+const metronomeAudioPath = 'audio/243748__unfa__metronome-2khz-strong-pulse.wav';
+
+final Map<int, List<String>> cues = {
+  0: ["Metronome", "Provides a beat for you to follow, with or without music."],
+  1: ["Footfall", "Plays footfall noises at your selected pace."],
+  2: ["Verbal Cue", "Plays selected or custom verbal cue at the selected pace."],
+  3: ["Video", "Plays a video of someone walking, with or without sound."]
+};
+final Map<int, List<String>> rates = {
+  0: ["Auto", "Auto detects your pace"],
+  1: ["10 Steps/Minute", ""],
+  2: ["20 Steps/Minute", ""],
+  3: ["30 Steps/Minute", ""],
+  4: ["40 Steps/Minute", ""],
+  5: ["50 Steps/Minute", ""],
+  6: ["60 Steps/Minute", ""],
+  7: ["70 Steps/Minute", ""],
+  8: ["80 Steps/Minute", ""]
+};
+String selectedCue = "";
+String selectedRate = "";
 
 class Walking extends StatefulWidget {
   const Walking({super.key});
@@ -19,22 +46,83 @@ class _WalkingState extends State<Walking> {
   String strStep = "0";
   bool isPressed = false;
   Timer? timer;
-  int timePassed = 0;
   int wpm = 0;
+  bool isStart = false;
+  bool isPause = false;
+  //TODO: change initial tempo
+  double tempo = 0;
+  bool soundEnabled = true;
+  late ReliableIntervalTimer _timer;
+  static AudioPlayer player = AudioPlayer();
+  final StopWatchTimer _stopWatchTimer = StopWatchTimer();
 
-  @override
-  void dispose() {
-    timer?.cancel();
-    super.dispose();
+
+  int _calculateTimerInterval(int tempo) {
+    double timerInterval = minute / tempo;
+
+    return timerInterval.round();
   }
 
-  void walkingRate() {
+  void onTimerTick(int elapsedMilliseconds) async {
+    if (soundEnabled) {
+      player.play(AssetSource(metronomeAudioPath));
+    }
+  }
+
+  ReliableIntervalTimer _scheduleTimer([int milliseconds = 10000]) {
+    return ReliableIntervalTimer(
+      interval: Duration(milliseconds: milliseconds),
+      callback: onTimerTick,
+    );
+  }
+
+  double distanceTravelled = 0;
+  double startLatitude = 0;
+  double startLongitude = 0;
+  double currentLatitude = 0;
+  double currentLongitude = 0;
+  late StreamSubscription<Position> positionStream;
+
+  void measuringDistance() {
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+    );
+    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+            (Position? position) {
+          //print(position == null ? 'Unknown' : '${position.latitude.toString()}, ${position.longitude.toString()}');
+          setState(() {
+            currentLatitude = position!.latitude;
+            currentLongitude = position.longitude;
+          });
+        });
+
     setState(() {
-      if (stepCount != 0) {
-        timePassed += 1;
-        wpm = ((stepCount / timePassed) * 60).round();
-      }
+      distanceTravelled = GeolocatorPlatform.instance.distanceBetween(startLatitude, startLongitude, currentLatitude, currentLongitude);
     });
+  }
+
+  void startMetronome(double tempo) async {
+    _timer = _scheduleTimer(
+      _calculateTimerInterval(tempo.round()),
+    );
+
+    await _timer.start();
+
+    //_stopWatchTimer.onStartTimer();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() async {
+    await _stopWatchTimer.dispose();
+    positionStream.cancel();
+    _timer.stop();
+    super.dispose();
   }
 
   void onStepCount(StepCount event) {
@@ -83,8 +171,6 @@ class _WalkingState extends State<Walking> {
   }
 
   void initPlatformState() {
-    timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => walkingRate());
-
     setState(() {
       isPressed = true;
       isOne = true;
@@ -105,13 +191,39 @@ class _WalkingState extends State<Walking> {
     setState(() {
       isPressed = false;
       stepCount = 0;
-      timePassed = 0;
       wpm = 0;
       strStep = "$stepCount";
     });
-
-    timer?.cancel();
   }
+
+  void startWalking() {
+    setState(() {
+      isStart = true;
+      isPause = false;
+    });
+  }
+
+  void stopWalking() {
+    setState(() {
+      isStart = false;
+    });
+  }
+
+  void pauseWalking() {
+    setState(() {
+      isPause = true;
+    });
+  }
+
+  void resumeWalking() {
+    setState(() {
+      isPause = false;
+    });
+  }
+
+  bool isStarted = false;
+  int startTime = 0;
+  bool startChecking = true;
 
   @override
   Widget build(BuildContext context) {
@@ -120,437 +232,521 @@ class _WalkingState extends State<Walking> {
       padding: EdgeInsets.only(left: width * 0.05, right: width * 0.05, top: 30),
       child: Column(
         children: <Widget>[
-          Container(
-            margin: const EdgeInsets.only(bottom: 20),
-            child: const Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Ready to move?", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
-            ),
+          Visibility(
+            visible: isStart,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              width: double.infinity,
+              height: 50,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                    side: const BorderSide(width: 2, color: Color(0xff0496FF)),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10))
+                    )
+                ),
+                onPressed: () {
+                  //TODO: Content function
+                },
+                child: const Text("I Need Assistance", style: TextStyle(color: Color(0xff0496FF), fontSize: 18)),
+              ),
+            )
           ),
           Container(
-            height: 320,
-            width: double.infinity,
             margin: const EdgeInsets.only(bottom: 20),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10.0)
+            child: Align(
+              alignment: Alignment.center,
+              child: Text(!isStart ? "Ready to move?" : !isPause ? "Walk In Session!" : "Walk Paused", style: const TextStyle(fontSize:32, fontWeight: FontWeight.bold))
             ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 15, right: 15, top: 7),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: const Text("Cue", style: TextStyle(fontSize:18, fontWeight: FontWeight.bold))
-                    ),
-                  ),
-                  Center(
-                    child: Container(
-                      width: double.infinity,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: const Color(0xffF8F8F8),
-                        borderRadius: BorderRadius.circular(12)),
-                      child: CustomDropDown(
-                        items: const [
-                          CustomDropdownMenuItem(
-                            value: 0,
-                            child: Text("Metronome", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 1,
-                            child: Text("Footfall", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 2,
-                            child: Text("Verbal Cue", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 3,
-                            child: Text("Video", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                        hintText: "Choose Cue Type",
-                        borderRadius: 5,
-                        onChanged: (val) {
-
-                        },
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        child: const Text("Rate", style: TextStyle(fontSize:18, fontWeight: FontWeight.bold))
-                    ),
-                  ),
-                  Center(
-                    child: Container(
-                      width: double.infinity,
-                      height: 60,
-                      decoration: BoxDecoration(
-                          color: const Color(0xffF8F8F8),
-                          borderRadius: BorderRadius.circular(12)),
-                      child: CustomDropDown(
-                        items: const [
-                          CustomDropdownMenuItem(
-                            value: 0,
-                            child: Text("10 steps/min", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 1,
-                            child: Text("20 steps/min", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 2,
-                            child: Text("30 steps/min", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 3,
-                            child: Text("40 steps/min", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 4,
-                            child: Text("50 steps/min", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 5,
-                            child: Text("60 steps/min", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                        hintText: "Choose Rate",
-                        borderRadius: 5,
-                        onChanged: (val) {
-
-                        },
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        child: const Text("Music", style: TextStyle(fontSize:18, fontWeight: FontWeight.bold))
-                    ),
-                  ),
-                  Center(
-                    child: Container(
-                      width: double.infinity,
-                      height: 60,
-                      decoration: BoxDecoration(
-                          color: const Color(0xffF8F8F8),
-                          borderRadius: BorderRadius.circular(12)),
-                      child: CustomDropDown(
-                        items: const [
-                          CustomDropdownMenuItem(
-                            value: 0,
-                            child: Text("Metronome", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 1,
-                            child: Text("Footfall", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 2,
-                            child: Text("Verbal Cue", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                          CustomDropdownMenuItem(
-                            value: 3,
-                            child: Text("Video", style: TextStyle(fontSize:24, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                        hintText: "Choose Music",
-                        borderRadius: 5,
-                        onChanged: (val) {
-
-                        },
-                      ),
-                    ),
-                  )
-                ],
+          ),
+          Visibility(
+            visible: !isStart,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              child: const Align(
+                alignment: Alignment.center,
+                child: Text(
+                  "Let’s get going! Before we start, we’ll set up\n your settings for this session.",
+                  style: TextStyle(fontSize:14, fontWeight: FontWeight.w400),
+                  textAlign: TextAlign.center
+                )
               ),
             ),
           ),
-          SizedBox(
+          Visibility(
+            visible: isStart,
+            child: Container(
               width: double.infinity,
-              height: 45,
-              child: TextButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                          RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0)
+              height: 380,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                  color: const Color(0xff0496FF),
+                  borderRadius: BorderRadius.circular(10.0)
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 13, right: 15, top: 15),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: const Text(
+                              "Time Elapsed",
+                              style: TextStyle(fontSize:14, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
                           )
-                      )
-                  ),
-                  onPressed: () {
-                    //TODO: Content function
-                  },
-                  child: const Text("Start Session", style: TextStyle(color: Colors.black)))),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: StreamBuilder<int>(
+                            stream: _stopWatchTimer.secondTime,
+                            initialData: _stopWatchTimer.secondTime.value,
+                            builder: (context, snap) {
+                              final value = snap.data;
+                              //Measures the walking rate for the first 10 seconds and set the tempo
+                              if (selectedRate == "Auto" && value! == 10) {
+                                wpm = (((stepCount + 5.5) / value) * 60).round();
+                                tempo = wpm.toDouble();
+                                if (isStarted == false) {
+                                  startMetronome(tempo);
+                                  isStarted = true;
+                                }
+                              } else if (value != 0) {
+                                wpm = (((stepCount + 5.5) / value! ) * 60).round();
+                                /*if ((tempo - wpm).abs() > 5) {
+                                  if (startChecking == true) {
+                                    startTime = value;
+                                    startChecking == false;
+                                  } else if(value - startTime > 10) {
+                                  }
+                                }*/
+                              }
+                              return Text(
+                                  value.toString(),
+                                  style: const TextStyle(fontSize:40, fontWeight: FontWeight.w600, color: Colors.white)
+                              );
+                            },
+                          ),
+                      ),
+                    ),
+
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: const Text(
+                              "You're Moving To",
+                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                          )
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  "Hotel California",
+                                  style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.white)
+                              ),
+                              Text(
+                                  "Playing from Playlist - Oldies Bops",
+                                  style: TextStyle(fontSize:15, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                              ),
+                            ],
+                          )
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: const Text(
+                              "Current Rate",
+                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                          )
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                              selectedRate == "Auto" ? "$selectedRate - Tempo: $tempo" : selectedRate,
+                              style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.white)
+                          )
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: const Text(
+                              "Distance Walked",
+                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                          )
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                              "$distanceTravelled Meters",
+                              style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.white)
+                          )
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: const Text(
+                              "Steps Walked",
+                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                          )
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                              "$strStep Steps",
+                              style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.white)
+                          )
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          ),
+          Visibility(
+            visible: !isStart,
+            child: Container(
+              height: 320,
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                  color: const Color(0xff0496FF),
+                  borderRadius: BorderRadius.circular(10.0)
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15, right: 15, top: 7),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: const Text(
+                          "Cue",
+                          style: TextStyle(fontSize:15, fontWeight: FontWeight.w600, color: Colors.white)
+                        )
+                      ),
+                    ),
+                    Center(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: CustomDropdownMenu(item: cues, height: 325, isCue: true,),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: const Text(
+                          "Rate",
+                          style: TextStyle(fontSize:15, fontWeight: FontWeight.w600, color: Colors.white)
+                        )
+                      ),
+                    ),
+                    Center(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: CustomDropdownMenu(item: rates, height: 415, isCue: false,)
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: const Text(
+                          "Music",
+                          style: TextStyle(fontSize:15, fontWeight: FontWeight.w600, color: Colors.white)
+                        )
+                      ),
+                    ),
+                    Center(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: Container()
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Visibility(
+            visible: !isStart,
+            child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: FilledButton(
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all<Color>(const Color(0xff0496FF)),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0)
+                            )
+                        )
+                    ),
+                    onPressed: () async {
+                      if (selectedRate != "Auto") {
+                        tempo = double.parse(selectedRate.substring(0, 2));
+                        startWalking();
+                        startMetronome(tempo);
+                        _stopWatchTimer.onStartTimer();
+                        initPlatformState();
+                        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+                        setState(() {
+                          startLatitude = position.latitude;
+                          startLongitude = position.longitude;
+                        });
+                        //measuringDistance();
+                      } else {
+                        startWalking();
+                        _stopWatchTimer.onStartTimer();
+                        initPlatformState();
+                        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+                        setState(() {
+                          startLatitude = position.latitude;
+                          startLongitude = position.longitude;
+                        });
+                        //measuringDistance();
+                      }
+                    },
+                    child: const Text("Start Session", style: TextStyle(color: Colors.white, fontSize: 18))
+                )
+            ),
+          ),
+          Visibility(
+            visible: isStart,
+            child: Container(
+                width: double.infinity,
+                height: 50,
+                margin: const EdgeInsets.only(bottom: 20),
+                child: FilledButton(
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all<Color>(const Color(0xff0496FF)),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0)
+                            )
+                        )
+                    ),
+                    onPressed: () async {
+                      if (isPause == false) {
+                        pauseWalking();
+                        await _timer.stop();
+                        _stopWatchTimer.onStopTimer();
+                      } else {
+                        resumeWalking();
+                        startWalking();
+                        _timer = _scheduleTimer(
+                          _calculateTimerInterval(tempo.round()),
+                        );
+                        _stopWatchTimer.onStartTimer();
+                        await _timer.start();
+                      }
+                    },
+                    child: Text(!isPause ? "Pause Walk" : "Resume", style: const TextStyle(color: Colors.white, fontSize: 18))
+                )
+            ),
+          ),
+          Visibility(
+            visible: isStart,
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: FilledButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(const Color(0xff0496FF)),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0)
+                    )
+                  )
+                ),
+                onPressed: () async {
+                  //TODO: End function
+                  stopWalking();
+                  await _timer.stop();
+                  _stopWatchTimer.onResetTimer();
+                  positionStream.cancel();
+                  reset();
+                  setState(() {
+                    tempo = 0;
+                  });
+                },
+                child: const Text("End Walk", style: TextStyle(color: Colors.white, fontSize: 18))
+              ),
+            ),
+          )
         ],
       ),
     );
   }
 }
 
-class CustomDropDown<T> extends StatefulWidget {
-  final List<CustomDropdownMenuItem> items;
-  final Function onChanged;
-  final String hintText;
-  final double borderRadius;
-  final double maxListHeight;
-  final double borderWidth;
-  final int defaultSelectedIndex;
-  final bool enabled;
+//TODO: Make separate widgets
+class CustomDropdownMenu extends StatefulWidget {
+  final Map<int, List<String>> item;
+  final double height;
+  final bool isCue;
 
-  const CustomDropDown(
-      {required this.items,
-        required this.onChanged,
-        this.hintText = "",
-        this.borderRadius = 0,
-        this.borderWidth = 1,
-        this.maxListHeight = 100,
-        this.defaultSelectedIndex = -1,
-        Key? key,
-        this.enabled = true})
-      : super(key: key);
+  const CustomDropdownMenu({super.key, required this.item, required this.height, required this.isCue});
 
   @override
-  State<CustomDropDown> createState() => _CustomDropDownState();
+  State<CustomDropdownMenu> createState() => _CustomDropdownMenuState();
 }
 
-class _CustomDropDownState extends State<CustomDropDown>
-    with WidgetsBindingObserver {
-  bool _isOpen = false, _isAnyItemSelected = false, _isReverse = false;
-  late OverlayEntry _overlayEntry;
-  late RenderBox? _renderBox;
-  Widget? _itemSelected;
-  late Offset dropDownOffset;
-  final LayerLink _layerLink = LayerLink();
+class _CustomDropdownMenuState extends State<CustomDropdownMenu> {
+  bool _isClicked = false;
+  final ScrollController _controllerOne = ScrollController();
+  OverlayEntry? overlayEntry;
+
+  void create(Map<int, List<String>> item) {
+    overlayEntry = OverlayEntry(builder: (context) {
+      final width = MediaQuery.of(context).size.width;
+      return Positioned(
+        left: width * 0.05 + 15,
+        right: width * 0.05 + 15,
+        top: widget.height,
+        child: Container(
+          height: 150,
+          decoration: BoxDecoration(
+            color: const Color(0xffD1EFFF),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Scrollbar(
+            thumbVisibility: true,
+            controller: _controllerOne,
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 10),
+              itemCount: item.length,
+              controller: _controllerOne,
+              itemBuilder: (BuildContext context, int index) {
+                return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (widget.isCue) {
+                          selectedCue = item[index]![0];
+                        } else {
+                          selectedRate = item[index]![0];
+                        }
+                        _isClicked = false;
+                      });
+                      removeOverlay();
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          DefaultTextStyle(
+                            style: const TextStyle(fontSize: 14, color: Colors.black, fontWeight: FontWeight.bold),
+                            child: Text(item[index]![0]),
+                          ),
+                          DefaultTextStyle(
+                            style: const TextStyle(fontSize: 12, color: Colors.black),
+                            child: Text(item[index]![1]),
+                          ),
+                        ],
+                      ),
+                    )
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  void insertOverlay(BuildContext context, Map<int, List<String>> item) {
+    create(item);
+
+    return Overlay.of(context).insert(overlayEntry!);
+  }
+
+  void removeOverlay() {
+    overlayEntry?.remove();
+    overlayEntry?.dispose();
+    overlayEntry = null;
+  }
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          dropDownOffset = getOffset();
-        });
-      }
-      if (widget.defaultSelectedIndex > -1) {
-        if (widget.defaultSelectedIndex < widget.items.length) {
-          if (mounted) {
-            setState(() {
-              _isAnyItemSelected = true;
-              _itemSelected = widget.items[widget.defaultSelectedIndex];
-              widget.onChanged(widget.items[widget.defaultSelectedIndex].value);
-            });
-          }
-        }
-      }
-    });
-    WidgetsBinding.instance.addObserver(this);
     super.initState();
-  }
-
-  void _addOverlay() {
-    if (mounted) {
-      setState(() {
-        _isOpen = true;
-      });
-    }
-
-    _overlayEntry = _createOverlayEntry();
-    Overlay.of(context).insert(_overlayEntry);
-  }
-
-  void _removeOverlay() {
-    if (mounted) {
-      setState(() {
-        _isOpen = false;
-      });
-      _overlayEntry.remove();
+    if (widget.isCue) {
+      selectedCue = widget.item[0]![0];
+    } else {
+      selectedRate = widget.item[0]![0];
     }
   }
 
   @override
-  dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+  void dispose() {
+    removeOverlay();
     super.dispose();
-  }
-
-  OverlayEntry _createOverlayEntry() {
-    _renderBox = context.findRenderObject() as RenderBox?;
-
-    var size = _renderBox!.size;
-
-    dropDownOffset = getOffset();
-
-    return OverlayEntry(
-        maintainState: false,
-        builder: (context) => Align(
-          alignment: Alignment.center,
-          child: CompositedTransformFollower(
-            link: _layerLink,
-            showWhenUnlinked: false,
-            offset: dropDownOffset,
-            child: SizedBox(
-              height: widget.maxListHeight + 60,
-              width: size.width,
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: _isReverse
-                    ? MainAxisAlignment.end
-                    : MainAxisAlignment.start,
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 5),
-                    child: Container(
-                      constraints: BoxConstraints(
-                          maxHeight: widget.maxListHeight + 55,
-                          maxWidth: size.width),
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12)),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(widget.borderRadius),
-                        ),
-                        child: Material(
-                          elevation: 0,
-                          shadowColor: Colors.black,
-                          child: ListView(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            children: widget.items
-                                .map((item) => GestureDetector(
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 15, right: 15, top: 8),
-                                child: item.child,
-                              ),
-                              onTap: () {
-                                if (mounted) {
-                                  setState(() {
-                                    _isAnyItemSelected = true;
-                                    _itemSelected = item.child;
-                                    _removeOverlay();
-                                    widget.onChanged(item.value);
-                                  });
-                                }
-                              },
-                            ))
-                                .toList(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ));
-  }
-
-  Offset getOffset() {
-    RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-    double y = renderBox!.localToGlobal(Offset.zero).dy;
-    double spaceAvailable = _getAvailableSpace(y + renderBox.size.height);
-    if (spaceAvailable > widget.maxListHeight) {
-      _isReverse = false;
-      return Offset(0, renderBox.size.height);
-    } else {
-      _isReverse = true;
-      return Offset(
-          0,
-          renderBox.size.height -
-              (widget.maxListHeight + renderBox.size.height));
-    }
-  }
-
-  double _getAvailableSpace(double offsetY) {
-    double safePaddingTop = MediaQuery.of(context).padding.top;
-    double safePaddingBottom = MediaQuery.of(context).padding.bottom;
-
-    double screenHeight =
-        MediaQuery.of(context).size.height - safePaddingBottom - safePaddingTop;
-
-    return screenHeight - offsetY;
   }
 
   @override
   Widget build(BuildContext context) {
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: GestureDetector(
-        onTap: widget.enabled
-            ? () {
-          _isOpen ? _removeOverlay() : _addOverlay();
-        }
-            : null,
-        child: Container(
-          decoration: _getDecoration(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Flexible(
-                  flex: 3,
-                  child: _isAnyItemSelected
-                    ? _itemSelected!
-                    : Text(
-                      widget.hintText,
-                      maxLines: 1,
-                      overflow: TextOverflow.clip,
-                      style: const TextStyle(fontSize:24, fontWeight: FontWeight.bold)
-                    ),
-                ),
-                Flexible(
-                  flex: 1,
-                  child: !(_isOpen && !_isReverse) ? const Icon(Icons.arrow_drop_down) : const Icon(Icons.arrow_drop_up),
-                ),
-              ],
-            ),
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _isClicked = !_isClicked;
+          if (_isClicked) {
+            insertOverlay(context, widget.item);
+          } else {
+            removeOverlay();
+          }
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(width: 2, color: Colors.white),
+          color: const Color(0xff0496FF)
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              widget.isCue
+                ? Text(selectedCue, style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),)
+                : Text(selectedRate, style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),),
+              !_isClicked ? const Icon(Icons.keyboard_arrow_down, color: Colors.white,) : const Icon(Icons.keyboard_arrow_up, color: Colors.white,)
+            ],
           ),
         ),
       ),
     );
-  }
-
-  Decoration? _getDecoration() {
-    if (_isOpen && !_isReverse) {
-      return BoxDecoration(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(widget.borderRadius),
-              topRight: Radius.circular(
-                widget.borderRadius,
-              )));
-    } else if (_isOpen && _isReverse) {
-      return BoxDecoration(
-          borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(widget.borderRadius),
-              bottomRight: Radius.circular(
-                widget.borderRadius,
-              )));
-    } else if (!_isOpen) {
-      return BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(widget.borderRadius)));
-    }
-    return null;
-  }
-}
-
-class CustomDropdownMenuItem<T> extends StatelessWidget {
-  final T value;
-  final Widget child;
-
-  const CustomDropdownMenuItem({super.key, required this.value, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
   }
 }

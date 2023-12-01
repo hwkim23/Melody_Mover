@@ -38,7 +38,7 @@ class _MyMusicState extends State<MyMusic> {
                 margin: const EdgeInsets.only(bottom: 20),
                 child: const Align(
                     alignment: Alignment.centerLeft,
-                    child: Text("My Music", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
+                    child: Text("My Music", style: TextStyle(fontSize:37, fontWeight: FontWeight.bold))
                 ),
               )
             ],

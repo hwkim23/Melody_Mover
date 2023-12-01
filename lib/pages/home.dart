@@ -70,31 +70,26 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-                SizedBox(
-                    width: double.infinity,
-                    height: 45,
-                    child: currentIndex == 0
-                      ? const Text("Friends", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
-                      : const Text("Communities", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
-                ),
                 Container(
-                  height: 50,
-                  margin: const EdgeInsets.symmetric(vertical: 20),
+                  height: 30,
+                  margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10.0)
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10.0),
+                    border: Border.all(color: const Color(0xff0496FF), width: 1.5),
                   ),
                   child: TabBar(
                     controller: _tabController,
                     indicator: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10.0),
-                        color: Colors.grey
+                      border: Border.all(color: const Color(0xff0496FF), width: 1.5),
+                      borderRadius: BorderRadius.circular(8.5),
+                      color: const Color(0xff0496FF)
                     ),
                     labelColor: Colors.white,
-                    unselectedLabelColor: Colors.black,
+                    unselectedLabelColor: const Color(0xff0496FF),
                     tabs: const [
                       Tab(text: "Friends"),
-                      Tab(text: "Community")
+                      Tab(text: "Communities")
                     ],
                   ),
                 ),
@@ -125,7 +120,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                             margin: const EdgeInsets.only(bottom: 20),
                             child: const Align(
                               alignment: Alignment.centerLeft,
-                              child: Text("Morris St. Crew", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
+                              child: Text("Morris St. Crew", style: TextStyle(fontSize:37, fontWeight: FontWeight.bold))
                             ),
                           ),
                           ListView.builder(
@@ -154,14 +149,14 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           ),
         ),
         Positioned(
-          bottom: 20,
-          right: 20,
+          bottom: 25,
+          right: 25,
           child: FloatingActionButton(
             onPressed: () {
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Challenges()));
             },
-            elevation: 3,
-            backgroundColor: Colors.black,
+            elevation: 5,
+            backgroundColor: const Color(0xff0496FF),
             child: const Icon(Icons.emoji_events),
           ),
         ),

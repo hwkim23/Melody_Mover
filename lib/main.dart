@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:melody_mover/pages/mainpage.dart';
 import 'package:melody_mover/store.dart';
 import 'package:provider/provider.dart';
@@ -35,6 +36,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> permission() async {
+    await Geolocator.checkPermission();
+
     Map<Permission, PermissionStatus> statuses = await [
       Permission.activityRecognition,
     ].request();

@@ -38,7 +38,7 @@ class _FaqsState extends State<Faqs> {
                 margin: const EdgeInsets.only(bottom: 20),
                 child: const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text("Common Questions", style: TextStyle(fontSize:35, fontWeight: FontWeight.bold))
+                  child: Text("Common Questions", style: TextStyle(fontSize:37, fontWeight: FontWeight.bold))
                 ),
               )
             ],
