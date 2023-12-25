@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:melody_mover/pages/mainpage.dart';
 import 'package:melody_mover/store.dart';
+import 'package:melody_mover/test.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'package:permission_handler/permission_handler.dart';
@@ -100,7 +101,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                   onPressed: () {
                     //TODO: Login function
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainPage()));
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Testing()));
                   },
                   child: const Text("Log In", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                 ),

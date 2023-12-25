@@ -49,7 +49,6 @@ class _WalkingState extends State<Walking> {
   int wpm = 0;
   bool isStart = false;
   bool isPause = false;
-  //TODO: change initial tempo
   double tempo = 0;
   bool soundEnabled = true;
   late ReliableIntervalTimer _timer;
@@ -67,6 +66,16 @@ class _WalkingState extends State<Walking> {
     if (soundEnabled) {
       player.play(AssetSource(metronomeAudioPath));
     }
+  }
+
+  void play() {
+    if (soundEnabled) {
+      player.play(AssetSource(metronomeAudioPath));
+    }
+  }
+
+  void playMetronome(int tempo) {
+    Timer.periodic(Duration(milliseconds: (60000 / tempo).round()), (Timer t) => play());
   }
 
   ReliableIntervalTimer _scheduleTimer([int milliseconds = 10000]) {
@@ -221,6 +230,10 @@ class _WalkingState extends State<Walking> {
     });
   }
 
+  void resetTimer() async {
+    await _timer.stop();
+  }
+
   bool isStarted = false;
   int startTime = 0;
   bool startChecking = true;
@@ -307,12 +320,22 @@ class _WalkingState extends State<Walking> {
                             builder: (context, snap) {
                               final value = snap.data;
                               //Measures the walking rate for the first 10 seconds and set the tempo
-                              if (selectedRate == "Auto" && value! == 10) {
+                              //Updates the tempo every 10 seconds after that
+                              /*if (isStarted == false) {
+                                playMetronome(60);
+                                isStarted = true;
+                              }*/
+                              //TODO: Change wpm to be divided by steps taken
+                              //TODO: Remove lag in between the update
+                              if (selectedRate == "Auto" && value! >= 10 && value % 10 == 0) {
                                 wpm = (((stepCount + 5.5) / value) * 60).round();
                                 tempo = wpm.toDouble();
                                 if (isStarted == false) {
                                   startMetronome(tempo);
                                   isStarted = true;
+                                } else {
+                                  resetTimer();
+                                  startMetronome(tempo);
                                 }
                               } else if (value != 0) {
                                 wpm = (((stepCount + 5.5) / value! ) * 60).round();

@@ -45,6 +45,7 @@ dependencies:
   intl: ^0.18.1
   stop_watch_timer: ^3.0.2
   geolocator: ^10.1.0
+  quiver: ^3.2.1
 
 dev_dependencies:
   flutter_test:
