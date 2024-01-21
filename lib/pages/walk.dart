@@ -3,9 +3,10 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pedometer/pedometer.dart';
-import 'package:reliable_interval_timer/reliable_interval_timer.dart';
-import 'package:stop_watch_timer/stop_watch_timer.dart';
+import 'package:quiver/async.dart';
+import 'package:quiver/time.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:stop_watch_timer/stop_watch_timer.dart';
 
 const minute = 1000 * 60;
 const metronomeAudioPath = 'audio/243748__unfa__metronome-2khz-strong-pulse.wav';
@@ -45,52 +46,39 @@ class _WalkingState extends State<Walking> {
   bool isOne = true;
   String strStep = "0";
   bool isPressed = false;
-  Timer? timer;
   int wpm = 0;
   bool isStart = false;
   bool isPause = false;
   double tempo = 0;
   bool soundEnabled = true;
-  late ReliableIntervalTimer _timer;
   static AudioPlayer player = AudioPlayer();
-  final StopWatchTimer _stopWatchTimer = StopWatchTimer();
-
-
-  int _calculateTimerInterval(int tempo) {
-    double timerInterval = minute / tempo;
-
-    return timerInterval.round();
-  }
-
-  void onTimerTick(int elapsedMilliseconds) async {
-    if (soundEnabled) {
-      player.play(AssetSource(metronomeAudioPath));
-    }
-  }
-
-  void play() {
-    if (soundEnabled) {
-      player.play(AssetSource(metronomeAudioPath));
-    }
-  }
-
-  void playMetronome(int tempo) {
-    Timer.periodic(Duration(milliseconds: (60000 / tempo).round()), (Timer t) => play());
-  }
-
-  ReliableIntervalTimer _scheduleTimer([int milliseconds = 10000]) {
-    return ReliableIntervalTimer(
-      interval: Duration(milliseconds: milliseconds),
-      callback: onTimerTick,
-    );
-  }
-
   double distanceTravelled = 0;
   double startLatitude = 0;
   double startLongitude = 0;
   double currentLatitude = 0;
   double currentLongitude = 0;
   late StreamSubscription<Position> positionStream;
+  StreamSubscription<DateTime>? metronome;
+  final StopWatchTimer _stopWatchTimer = StopWatchTimer();
+
+  void playAudio() async {
+    if (soundEnabled) {
+      player.play(AssetSource(metronomeAudioPath));
+    }
+  }
+
+  void start(double tempo) {
+    if (metronome == null) {
+      metronome = Metronome.epoch(aMillisecond * (60000 / tempo).round()).listen((d) => playAudio());
+    } else {
+      metronome?.cancel();
+      metronome = Metronome.epoch(aMillisecond * (60000 / tempo).round()).listen((d) => playAudio());
+    }
+  }
+
+  void stop() {
+    metronome?.cancel();
+  }
 
   void measuringDistance() {
     const LocationSettings locationSettings = LocationSettings(
@@ -111,16 +99,6 @@ class _WalkingState extends State<Walking> {
     });
   }
 
-  void startMetronome(double tempo) async {
-    _timer = _scheduleTimer(
-      _calculateTimerInterval(tempo.round()),
-    );
-
-    await _timer.start();
-
-    //_stopWatchTimer.onStartTimer();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -128,9 +106,7 @@ class _WalkingState extends State<Walking> {
 
   @override
   void dispose() async {
-    await _stopWatchTimer.dispose();
     positionStream.cancel();
-    _timer.stop();
     super.dispose();
   }
 
@@ -230,10 +206,6 @@ class _WalkingState extends State<Walking> {
     });
   }
 
-  void resetTimer() async {
-    await _timer.stop();
-  }
-
   bool isStarted = false;
   int startTime = 0;
   bool startChecking = true;
@@ -293,7 +265,7 @@ class _WalkingState extends State<Walking> {
               height: 380,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                  color: const Color(0xff0496FF),
+                  color: !isPause ? const Color(0xff0496FF) : const Color(0xffD1EFFF),
                   borderRadius: BorderRadius.circular(10.0)
               ),
               child: Padding(
@@ -304,9 +276,9 @@ class _WalkingState extends State<Walking> {
                       alignment: Alignment.centerLeft,
                       child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: const Text(
+                          child: Text(
                               "Time Elapsed",
-                              style: TextStyle(fontSize:14, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                              style: TextStyle(fontSize:14, fontWeight: FontWeight.w600, color: !isPause ? const Color(0xffD1EFFF) : const Color(0xff0496FF))
                           )
                       ),
                     ),
@@ -319,37 +291,21 @@ class _WalkingState extends State<Walking> {
                             initialData: _stopWatchTimer.secondTime.value,
                             builder: (context, snap) {
                               final value = snap.data;
-                              //Measures the walking rate for the first 10 seconds and set the tempo
-                              //Updates the tempo every 10 seconds after that
-                              /*if (isStarted == false) {
-                                playMetronome(60);
-                                isStarted = true;
-                              }*/
-                              //TODO: Change wpm to be divided by steps taken
-                              //TODO: Remove lag in between the update
-                              if (selectedRate == "Auto" && value! >= 10 && value % 10 == 0) {
-                                wpm = (((stepCount + 5.5) / value) * 60).round();
+                              if (selectedRate == "Auto" && value! >= 10 && value % 5 == 0 && _status == 'walking') {
+                                wpm = (((stepCount) / value) * 60).round();
                                 tempo = wpm.toDouble();
                                 if (isStarted == false) {
-                                  startMetronome(tempo);
                                   isStarted = true;
+                                  start(tempo);
                                 } else {
-                                  resetTimer();
-                                  startMetronome(tempo);
+                                  isStarted = false;
                                 }
                               } else if (value != 0) {
                                 wpm = (((stepCount + 5.5) / value! ) * 60).round();
-                                /*if ((tempo - wpm).abs() > 5) {
-                                  if (startChecking == true) {
-                                    startTime = value;
-                                    startChecking == false;
-                                  } else if(value - startTime > 10) {
-                                  }
-                                }*/
                               }
                               return Text(
                                   value.toString(),
-                                  style: const TextStyle(fontSize:40, fontWeight: FontWeight.w600, color: Colors.white)
+                                  style: TextStyle(fontSize:40, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
                               );
                             },
                           ),
@@ -360,9 +316,9 @@ class _WalkingState extends State<Walking> {
                       alignment: Alignment.centerLeft,
                       child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: const Text(
+                          child: Text(
                               "You're Moving To",
-                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: !isPause ? const Color(0xffD1EFFF) : const Color(0xff0496FF))
                           )
                       ),
                     ),
@@ -370,16 +326,16 @@ class _WalkingState extends State<Walking> {
                       alignment: Alignment.centerLeft,
                       child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: const Column(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                   "Hotel California",
-                                  style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.white)
+                                  style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
                               ),
                               Text(
                                   "Playing from Playlist - Oldies Bops",
-                                  style: TextStyle(fontSize:15, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                                  style: TextStyle(fontSize:15, fontWeight: FontWeight.w600, color:!isPause ? Colors.white : Colors.black)
                               ),
                             ],
                           )
@@ -389,9 +345,9 @@ class _WalkingState extends State<Walking> {
                       alignment: Alignment.centerLeft,
                       child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: const Text(
+                          child: Text(
                               "Current Rate",
-                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: !isPause ? const Color(0xffD1EFFF) : const Color(0xff0496FF))
                           )
                       ),
                     ),
@@ -401,7 +357,7 @@ class _WalkingState extends State<Walking> {
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
                               selectedRate == "Auto" ? "$selectedRate - Tempo: $tempo" : selectedRate,
-                              style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.white)
+                              style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
                           )
                       ),
                     ),
@@ -409,9 +365,9 @@ class _WalkingState extends State<Walking> {
                       alignment: Alignment.centerLeft,
                       child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: const Text(
+                          child: Text(
                               "Distance Walked",
-                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: !isPause ? const Color(0xffD1EFFF) : const Color(0xff0496FF))
                           )
                       ),
                     ),
@@ -421,7 +377,7 @@ class _WalkingState extends State<Walking> {
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
                               "$distanceTravelled Meters",
-                              style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.white)
+                              style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
                           )
                       ),
                     ),
@@ -429,9 +385,9 @@ class _WalkingState extends State<Walking> {
                       alignment: Alignment.centerLeft,
                       child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: const Text(
+                          child: Text(
                               "Steps Walked",
-                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: Color(0xffD1EFFF))
+                              style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: !isPause ? const Color(0xffD1EFFF) : const Color(0xff0496FF))
                           )
                       ),
                     ),
@@ -441,7 +397,7 @@ class _WalkingState extends State<Walking> {
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
                               "$strStep Steps",
-                              style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.white)
+                              style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
                           )
                       ),
                     ),
@@ -538,7 +494,7 @@ class _WalkingState extends State<Walking> {
                       if (selectedRate != "Auto") {
                         tempo = double.parse(selectedRate.substring(0, 2));
                         startWalking();
-                        startMetronome(tempo);
+                        start(tempo);
                         _stopWatchTimer.onStartTimer();
                         initPlatformState();
                         Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
@@ -581,16 +537,15 @@ class _WalkingState extends State<Walking> {
                     onPressed: () async {
                       if (isPause == false) {
                         pauseWalking();
-                        await _timer.stop();
                         _stopWatchTimer.onStopTimer();
                       } else {
                         resumeWalking();
                         startWalking();
-                        _timer = _scheduleTimer(
+                        /*_timer = _scheduleTimer(
                           _calculateTimerInterval(tempo.round()),
-                        );
+                        );*/
                         _stopWatchTimer.onStartTimer();
-                        await _timer.start();
+                        //await _timer.start();
                       }
                     },
                     child: Text(!isPause ? "Pause Walk" : "Resume", style: const TextStyle(color: Colors.white, fontSize: 18))
@@ -614,7 +569,8 @@ class _WalkingState extends State<Walking> {
                 onPressed: () async {
                   //TODO: End function
                   stopWalking();
-                  await _timer.stop();
+                  stop();
+                  //await _timer.stop();
                   _stopWatchTimer.onResetTimer();
                   positionStream.cancel();
                   reset();

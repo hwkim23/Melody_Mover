@@ -101,7 +101,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                   onPressed: () {
                     //TODO: Login function
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Testing()));
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainPage()));
                   },
                   child: const Text("Log In", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
