@@ -107,7 +107,7 @@ class _LoginState extends State<Login> {
                                   color: Color(0xffF0F0F0)
                                 )
                               ),
-                              hintText: 'Emails',
+                              hintText: 'Email',
                               filled: true,
                               fillColor: Color(0xffF0F0F0)
                             ),
