@@ -5,14 +5,14 @@ import 'package:provider/provider.dart';
 import '../bottomnavigationbar.dart';
 import '../store.dart';
 
-class Settings extends StatefulWidget {
-  const Settings({super.key});
+class Setting extends StatefulWidget {
+  const Setting({super.key});
 
   @override
-  State<Settings> createState() => _SettingsState();
+  State<Setting> createState() => _SettingState();
 }
 
-class _SettingsState extends State<Settings> {
+class _SettingState extends State<Setting> {
   @override
   void initState() {
     super.initState();

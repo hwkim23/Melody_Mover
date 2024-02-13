@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "332477826333",
+    "project_id": "melodymover",
+    "storage_bucket": "melodymover.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332477826333:android:7c3fc152aaa6f58068cdf4",
+        "android_client_info": {
+          "package_name": "com.melodymover.melodymover"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBojzaPbxqjgyDfL_iIqrn0w3G-o99doQ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

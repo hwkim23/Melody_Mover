@@ -46,6 +46,11 @@ dependencies:
   stop_watch_timer: ^3.0.2
   geolocator: ^10.1.0
   quiver: ^3.2.1
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
+  cloud_firestore: ^4.14.0
+  change_app_package_name: ^1.1.0
+  form_field_validator: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +71,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/audio/
+    - assets/image/
   # fonts:
   #   - family: Schyler
   #     fonts:

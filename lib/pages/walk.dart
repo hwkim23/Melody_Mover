@@ -72,7 +72,9 @@ class _WalkingState extends State<Walking> {
       metronome = Metronome.epoch(aMillisecond * (60000 / tempo).round()).listen((d) => playAudio());
     } else {
       metronome?.cancel();
-      metronome = Metronome.epoch(aMillisecond * (60000 / tempo).round()).listen((d) => playAudio());
+      Timer(const Duration(milliseconds: 500), () {
+        metronome = Metronome.epoch(aMillisecond * (60000 / tempo).round()).listen((d) => playAudio());
+      });
     }
   }
 
@@ -291,7 +293,7 @@ class _WalkingState extends State<Walking> {
                             initialData: _stopWatchTimer.secondTime.value,
                             builder: (context, snap) {
                               final value = snap.data;
-                              if (selectedRate == "Auto" && value! >= 10 && value % 5 == 0 && _status == 'walking') {
+                              if (selectedRate == "Auto" && value! >= 5 && value % 5 == 0 && _status == 'walking') {
                                 wpm = (((stepCount) / value) * 60).round();
                                 tempo = wpm.toDouble();
                                 if (isStarted == false) {
