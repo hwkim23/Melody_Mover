@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:melody_mover/pages/stats.dart';
+import 'package:melody_mover/pages/walk.dart';
 import 'package:provider/provider.dart';
 import '../appbar.dart';
 import '../bottomnavigationbar.dart';
 import '../drawer.dart';
 import '../store.dart';
+import 'home.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});

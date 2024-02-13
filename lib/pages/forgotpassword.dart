@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
-
 import '../main.dart';
 
 class ForgotPassword extends StatefulWidget {
@@ -66,6 +65,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         Container(
                           margin: const EdgeInsets.only(bottom: 15),
                           child: TextFormField(
+                            keyboardType: TextInputType.emailAddress,
                             controller: _emailController,
                             decoration: const InputDecoration(
                                 focusedErrorBorder: OutlineInputBorder(

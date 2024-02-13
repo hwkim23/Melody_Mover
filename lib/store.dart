@@ -6,7 +6,7 @@ import 'package:melody_mover/pages/walk.dart';
 class Store1 extends ChangeNotifier {
   int selectedIndex = 1;
 
-  List<Widget> pages = <Widget>[
+  final List<Widget> pages = <Widget>[
     const Walking(),
     const Home(),
     const Statistics()

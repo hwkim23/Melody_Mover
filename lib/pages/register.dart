@@ -2,8 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
-
-import '../main.dart';
+import 'mainpage.dart';
 
 final TextEditingController _nameController = TextEditingController();
 final TextEditingController _emailController = TextEditingController();
@@ -567,10 +566,16 @@ class _RegisterLastState extends State<RegisterLast> {
       await _auth
           .createUserWithEmailAndPassword(
           email: _emailController.text, password: _passwordController.text)
-          .whenComplete(() => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registered Successfully")),
-      ).closed.whenComplete(() => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const RegisterSuccess())))
-      );
+          .whenComplete(() => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const RegisterSuccess())));
+      await firestore.collection('users').add({
+        "email" : _emailController.text,
+        "first_name" : _nameController.text.contains(" ") ? _nameController.text.split(" ")[0] : _nameController.text,
+        "last_name" : _nameController.text.contains(" ") ? _nameController.text.split(" ")[1] : "",
+        "user_name" : _userNameController.text
+      });
+      await _auth
+          .signInWithEmailAndPassword(
+          email: _emailController.text, password: _passwordController.text);
     }
   }
 
@@ -688,6 +693,8 @@ class _RegisterLastState extends State<RegisterLast> {
                   onPressed: () {
                     try {
                       signup();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Registered Successfully")));
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Error caused during registration")));
@@ -775,7 +782,7 @@ class _RegisterSuccessState extends State<RegisterSuccess> {
                       )
                   ),
                   onPressed: () {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyApp()));
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainPage()));
                   },
                   child: const Text("Get Started", style: TextStyle(color: Color(0xff0496FF), fontSize: 16, fontWeight: FontWeight.w600)),
                 ),

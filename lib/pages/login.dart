@@ -25,10 +25,7 @@ class _LoginState extends State<Login> {
       await _auth
         .signInWithEmailAndPassword(
           email: _emailController.text, password: _passwordController.text)
-          .whenComplete(() => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Logged In Successfully")),
-      ).closed.whenComplete(() => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainPage())))
-      );
+          .whenComplete(() =>  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainPage())));
     }
   }
 
@@ -184,6 +181,8 @@ class _LoginState extends State<Login> {
                   onPressed: () {
                     try {
                       logIn();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Logged In Successfully")));
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Error caused during login")));

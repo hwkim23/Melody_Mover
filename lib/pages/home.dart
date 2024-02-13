@@ -80,6 +80,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   ),
                   child: TabBar(
                     controller: _tabController,
+                    indicatorSize: TabBarIndicatorSize.tab,
                     indicator: BoxDecoration(
                       border: Border.all(color: const Color(0xff0496FF), width: 1.5),
                       borderRadius: BorderRadius.circular(8.5),
@@ -157,7 +158,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             },
             elevation: 5,
             backgroundColor: const Color(0xff0496FF),
-            child: const Icon(Icons.emoji_events),
+            child: const Icon(Icons.emoji_events, color: Colors.white,),
           ),
         ),
       ],

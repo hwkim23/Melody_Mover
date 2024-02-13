@@ -107,7 +107,7 @@ class _WalkingState extends State<Walking> {
   }
 
   @override
-  void dispose() async {
+  void dispose() {
     positionStream.cancel();
     super.dispose();
   }

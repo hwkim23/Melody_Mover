@@ -16,27 +16,102 @@ class _BaseBottomNavigationBarState extends State<BaseBottomNavigationBar> {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      backgroundColor: const Color(0xff0496FF),
-      selectedItemColor: (context.watch<Store1>().selectedIndex != -1) ? Colors.white : Colors.grey,
-      unselectedItemColor: Colors.grey,
-      elevation: 10.0,
-      items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: Icon(Icons.radio_button_checked_rounded),
-          label: 'Walk',
+    return buildMyNavBar(context);
+  }
+
+  Container buildMyNavBar(BuildContext context) {
+    return Container(
+      height: 60,
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.bar_chart),
-          label: 'Stats',
-        ),
-      ],
-      currentIndex: (context.watch<Store1>().selectedIndex != -1) ? context.watch<Store1>().selectedIndex : 0, //New
-      onTap: onItemTapped
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Flexible(
+            fit: FlexFit.tight,
+            child: Container(
+              color: context.watch<Store1>().selectedIndex == 0 ? const Color(0xff0082DF) : const Color(0xff0496FF),
+              height: double.infinity,
+              child: IconButton(
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                enableFeedback: false,
+                onPressed: () {
+                  onItemTapped(0);
+                },
+                icon: context.watch<Store1>().selectedIndex == 0
+                    ? const Icon(
+                  Icons.directions_walk,
+                  color: Colors.white,
+                  size: 35,
+                )
+                    : const Icon(
+                  Icons.directions_walk_outlined,
+                  color: Colors.white,
+                  size: 35,
+                ),
+              ),
+            ),
+          ),
+          Flexible(
+            fit: FlexFit.tight,
+            child: Container(
+              color: context.watch<Store1>().selectedIndex == 1 ? const Color(0xff0082DF) : const Color(0xff0496FF),
+              height: double.infinity,
+              child: IconButton(
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                enableFeedback: false,
+                onPressed: () {
+                  onItemTapped(1);
+                },
+                icon: context.watch<Store1>().selectedIndex == 1
+                    ? const Icon(
+                  Icons.home,
+                  color: Colors.white,
+                  size: 35,
+                )
+                    : const Icon(
+                  Icons.home_outlined,
+                  color: Colors.white,
+                  size: 35,
+                ),
+              ),
+            ),
+          ),
+          Flexible(
+            fit: FlexFit.tight,
+            child: Container(
+              color: context.watch<Store1>().selectedIndex == 2 ? const Color(0xff0082DF) : const Color(0xff0496FF),
+              height: double.infinity,
+              child: IconButton(
+                enableFeedback: false,
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                onPressed: () {
+                  onItemTapped(2);
+                },
+                icon: context.watch<Store1>().selectedIndex == 2
+                    ? const Icon(
+                  Icons.bar_chart,
+                  color: Colors.white,
+                  size: 35,
+                )
+                    : const Icon(
+                  Icons.bar_chart_outlined,
+                  color: Colors.white,
+                  size: 35,
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
     );
   }
 }

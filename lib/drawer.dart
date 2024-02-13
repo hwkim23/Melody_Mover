@@ -21,9 +21,8 @@ class _BaseDrawerState extends State<BaseDrawer> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   void signOut() async {
-    await _auth.signOut().whenComplete(() => ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Logged Out Successfully")),
-    ).closed.whenComplete(() => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyApp()))));
+    await _auth.signOut().whenComplete(() => Navigator
+        .pushReplacement(context, MaterialPageRoute(builder: (context) => const MyApp())));
   }
 
   @override
@@ -78,7 +77,10 @@ class _BaseDrawerState extends State<BaseDrawer> {
                   title: const Text("Logout", style: TextStyle(fontSize: 16, decoration: TextDecoration.underline)),
                   onTap: () {
                     try {
+                      Navigator.pop(context);
                       signOut();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Logged Out Successfully")));
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Error caused during log out")));
