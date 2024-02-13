@@ -1,15 +1,10 @@
 import 'dart:async';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pedometer/pedometer.dart';
-import 'package:quiver/async.dart';
-import 'package:quiver/time.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
-
-const minute = 1000 * 60;
-const metronomeAudioPath = 'audio/243748__unfa__metronome-2khz-strong-pulse.wav';
+import 'package:metronome/metronome.dart';
 
 final Map<int, List<String>> cues = {
   0: ["Metronome", "Provides a beat for you to follow, with or without music."],
@@ -47,39 +42,50 @@ class _WalkingState extends State<Walking> {
   String strStep = "0";
   bool isPressed = false;
   int wpm = 0;
+  var wpms = [0, 0];
   bool isStart = false;
   bool isPause = false;
   double tempo = 0;
   bool soundEnabled = true;
-  static AudioPlayer player = AudioPlayer();
+  //static AudioPlayer player = AudioPlayer();
   double distanceTravelled = 0;
   double startLatitude = 0;
   double startLongitude = 0;
   double currentLatitude = 0;
   double currentLongitude = 0;
   late StreamSubscription<Position> positionStream;
-  StreamSubscription<DateTime>? metronome;
   final StopWatchTimer _stopWatchTimer = StopWatchTimer();
+  final StopWatchTimer _stopWatchTimerWalk = StopWatchTimer();
+  final metronome = Metronome();
+  double bpm = 120;
+  double vol = 50;
 
-  void playAudio() async {
-    if (soundEnabled) {
-      player.play(AssetSource(metronomeAudioPath));
-    }
+  @override
+  void initState() {
+    metronome.init('assets/audio/243748__unfa__metronome-2khz-strong-pulse.wav', bpm: bpm, volume: vol);
+    //print("hi");
+    super.initState();
   }
 
   void start(double tempo) {
-    if (metronome == null) {
-      metronome = Metronome.epoch(aMillisecond * (60000 / tempo).round()).listen((d) => playAudio());
+    //metronome.setBPM(tempo);
+    metronome.play(tempo);
+  }
+
+  bool isPlaying = false;
+
+  void changeBPM(double tempo) {
+    if (!isPlaying) {
+      metronome.play(tempo);
+      isPlaying = true;
     } else {
-      metronome?.cancel();
-      Timer(const Duration(milliseconds: 500), () {
-        metronome = Metronome.epoch(aMillisecond * (60000 / tempo).round()).listen((d) => playAudio());
-      });
+      metronome.setBPM(tempo);
     }
   }
 
   void stop() {
-    metronome?.cancel();
+    metronome.stop();
+    isPlaying = false;
   }
 
   void measuringDistance() {
@@ -99,11 +105,6 @@ class _WalkingState extends State<Walking> {
     setState(() {
       distanceTravelled = GeolocatorPlatform.instance.distanceBetween(startLatitude, startLongitude, currentLatitude, currentLongitude);
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
   }
 
   @override
@@ -240,7 +241,7 @@ class _WalkingState extends State<Walking> {
             )
           ),
           Container(
-            margin: const EdgeInsets.only(bottom: 20),
+            margin: const EdgeInsets.only(bottom: 15),
             child: Align(
               alignment: Alignment.center,
               child: Text(!isStart ? "Ready to move?" : !isPause ? "Walk In Session!" : "Walk Paused", style: const TextStyle(fontSize:32, fontWeight: FontWeight.bold))
@@ -249,7 +250,7 @@ class _WalkingState extends State<Walking> {
           Visibility(
             visible: !isStart,
             child: Container(
-              margin: const EdgeInsets.only(bottom: 20),
+              margin: const EdgeInsets.only(bottom: 15),
               child: const Align(
                 alignment: Alignment.center,
                 child: Text(
@@ -264,7 +265,7 @@ class _WalkingState extends State<Walking> {
             visible: isStart,
             child: Container(
               width: double.infinity,
-              height: 380,
+              height: 410,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                   color: !isPause ? const Color(0xff0496FF) : const Color(0xffD1EFFF),
@@ -292,21 +293,16 @@ class _WalkingState extends State<Walking> {
                             stream: _stopWatchTimer.secondTime,
                             initialData: _stopWatchTimer.secondTime.value,
                             builder: (context, snap) {
-                              final value = snap.data;
-                              if (selectedRate == "Auto" && value! >= 5 && value % 5 == 0 && _status == 'walking') {
-                                wpm = (((stepCount) / value) * 60).round();
-                                tempo = wpm.toDouble();
-                                if (isStarted == false) {
-                                  isStarted = true;
-                                  start(tempo);
-                                } else {
-                                  isStarted = false;
-                                }
-                              } else if (value != 0) {
-                                wpm = (((stepCount + 5.5) / value! ) * 60).round();
+                              final time = snap.data;
+
+                              if (_status != "walking") {
+                                _stopWatchTimerWalk.onStopTimer();
+                              } else {
+                                _stopWatchTimerWalk.onStartTimer();
                               }
+
                               return Text(
-                                  value.toString(),
+                                  time.toString(),
                                   style: TextStyle(fontSize:40, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
                               );
                             },
@@ -397,9 +393,30 @@ class _WalkingState extends State<Walking> {
                       alignment: Alignment.centerLeft,
                       child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                              "$strStep Steps",
-                              style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
+                          child: StreamBuilder<int>(
+                            stream: _stopWatchTimerWalk.secondTime,
+                            initialData: _stopWatchTimerWalk.secondTime.value,
+                            builder: (context, snap) {
+                              final value = snap.data;
+                              //print(value);
+                              if (selectedRate == "Auto" && value! >= 5 && value % 5 == 0) {
+                                wpm = (((stepCount) / value) * 60).round();
+                                tempo = wpm.toDouble();
+                                if (isStarted == false) {
+                                  isStarted = true;
+                                  changeBPM(tempo);
+                                  isStarted = true;
+                                } else {
+                                  isStarted = false;
+                                }
+                              } else if (value != 0) {
+                                wpm = (((stepCount) / value!) * 60).round();
+                              }
+                              return Text(
+                                  "$strStep Steps",
+                                  style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
+                              );
+                            }
                           )
                       ),
                     ),
@@ -498,6 +515,7 @@ class _WalkingState extends State<Walking> {
                         startWalking();
                         start(tempo);
                         _stopWatchTimer.onStartTimer();
+                        _stopWatchTimerWalk.onStartTimer();
                         initPlatformState();
                         Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
                         setState(() {
@@ -508,6 +526,8 @@ class _WalkingState extends State<Walking> {
                       } else {
                         startWalking();
                         _stopWatchTimer.onStartTimer();
+                        _stopWatchTimerWalk.onStartTimer();
+                        tempo = 0;
                         initPlatformState();
                         Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
                         setState(() {
@@ -540,6 +560,8 @@ class _WalkingState extends State<Walking> {
                       if (isPause == false) {
                         pauseWalking();
                         _stopWatchTimer.onStopTimer();
+                        _stopWatchTimerWalk.onStopTimer();
+                        metronome.stop();
                       } else {
                         resumeWalking();
                         startWalking();
@@ -547,7 +569,9 @@ class _WalkingState extends State<Walking> {
                           _calculateTimerInterval(tempo.round()),
                         );*/
                         _stopWatchTimer.onStartTimer();
+                        _stopWatchTimerWalk.onStartTimer();
                         //await _timer.start();
+                        metronome.play(tempo);
                       }
                     },
                     child: Text(!isPause ? "Pause Walk" : "Resume", style: const TextStyle(color: Colors.white, fontSize: 18))
@@ -574,6 +598,7 @@ class _WalkingState extends State<Walking> {
                   stop();
                   //await _timer.stop();
                   _stopWatchTimer.onResetTimer();
+                  _stopWatchTimerWalk.onResetTimer();
                   positionStream.cancel();
                   reset();
                   setState(() {

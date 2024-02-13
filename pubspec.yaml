@@ -45,12 +45,31 @@ dependencies:
   intl: ^0.18.1
   stop_watch_timer: ^3.0.2
   geolocator: ^10.1.0
-  quiver: ^3.2.1
+  #quiver: ^3.2.1
   firebase_core: ^2.24.2
   firebase_auth: ^4.16.0
   cloud_firestore: ^4.14.0
   change_app_package_name: ^1.1.0
   form_field_validator: ^1.1.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.10
+  metronome: ^1.0.3
+
+flutter_launcher_icons:
+  image_path_android: "assets/image/icon-710x599-android.png"
+  image_path_ios: "assets/image/icon-1024x1024.png"
+  android: true # can specify file name here e.g. "ic_launcher"
+  ios: true # can specify file name here e.g. "My-Launcher-Icon"
+  min_sdk_android: 23
+
+flutter_native_splash:
+  color: "#0496FF"
+  image: assets/image/splash.png
+  android_12:
+    image: assets/image/android12_splash.png
+    color: "#0496FF"
+    icon_background_color: "#0496FF"
+
 
 dev_dependencies:
   flutter_test:

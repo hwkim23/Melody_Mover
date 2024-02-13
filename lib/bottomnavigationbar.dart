@@ -21,7 +21,7 @@ class _BaseBottomNavigationBarState extends State<BaseBottomNavigationBar> {
 
   Container buildMyNavBar(BuildContext context) {
     return Container(
-      height: 60,
+      height: 55,
       decoration: const BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.only(
