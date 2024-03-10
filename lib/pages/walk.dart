@@ -633,7 +633,6 @@ class _WalkingState extends State<Walking> {
                   )
                 ),
                 onPressed: () async {
-                  //TODO: End function with firestore upload
                   stopWalking();
                   stop();
                   _stopWatchTimer.onStopTimer();

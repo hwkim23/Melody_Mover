@@ -55,6 +55,10 @@ dependencies:
   flutter_native_splash: ^2.3.10
   metronome: ^1.0.3
   fl_chart: ^0.66.2
+  image_picker: ^1.0.7
+  image_cropper: ^5.0.1
+  path: ^1.8.3
+  firebase_storage: ^11.6.9
 
 flutter_launcher_icons:
   image_path_android: "assets/image/icon-710x599-android.png"
