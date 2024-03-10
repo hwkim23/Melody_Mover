@@ -562,6 +562,7 @@ class _RegisterLastState extends State<RegisterLast> {
   final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
 
   void signup() async {
+    final uid = _auth.currentUser?.uid;
     if (_formkey.currentState!.validate()) {
       await _auth
           .createUserWithEmailAndPassword(
@@ -571,7 +572,8 @@ class _RegisterLastState extends State<RegisterLast> {
         "email" : _emailController.text,
         "first_name" : _nameController.text.contains(" ") ? _nameController.text.split(" ")[0] : _nameController.text,
         "last_name" : _nameController.text.contains(" ") ? _nameController.text.split(" ")[1] : "",
-        "user_name" : _userNameController.text
+        "user_name" : _userNameController.text,
+        "userID" : uid
       });
       await _auth
           .signInWithEmailAndPassword(

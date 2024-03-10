@@ -11,7 +11,18 @@ class EndWalk extends StatefulWidget {
   final String timeElapsed;
   final String stepCount;
   final double distanceTravelled;
-  const EndWalk({super.key, required this.timeElapsed, required this.stepCount, required this.distanceTravelled});
+  final List<int> stepCounts;
+  final int freezes;
+  final List<double> distances;
+  const EndWalk({
+    super.key,
+    required this.timeElapsed,
+    required this.stepCount,
+    required this.distanceTravelled,
+    required this.stepCounts,
+    required this.freezes,
+    required this.distances
+  });
 
   @override
   State<EndWalk> createState() => _EndWalkState();
@@ -24,7 +35,8 @@ class _EndWalkState extends State<EndWalk> {
   double avgStepLengthVar = 0;
   double stepDur = 0;
   double stepDurVar = 0;
-  int freezes = 0;
+  List<double> avgStepLengths = [];
+  List<double> stepDurs = [];
   List<double> avgRates = [];
 
   @override
@@ -35,6 +47,20 @@ class _EndWalkState extends State<EndWalk> {
       avgSpeed = widget.distanceTravelled / int.parse(widget.timeElapsed);
       avgStepLength = widget.distanceTravelled / int.parse(widget.stepCount);
       stepDur = int.parse(widget.timeElapsed) / int.parse(widget.stepCount);
+      for (int i = 0; i < widget.stepCounts.length; i++) {
+        avgStepLengths.add(widget.distances[i] / (widget.stepCounts[i]));
+        stepDurs.add(60 / (widget.stepCounts[i]));
+        avgRates.add((widget.stepCounts[i] / (60*(i+1))) * 60);
+      }
+      avgStepLengths.sort();
+      stepDurs.sort();
+      if (avgStepLengths.isNotEmpty && stepDurs.isNotEmpty) {
+        avgStepLengthVar = avgStepLengths.last - avgStepLengths.first;
+        stepDurVar = stepDurs.last - stepDurs.first;
+      } else {
+        avgStepLengthVar = 0;
+        stepDurVar = 0;
+      }
     });
     WidgetsBinding.instance.addPostFrameCallback((_){
       try {
@@ -56,7 +82,7 @@ class _EndWalkState extends State<EndWalk> {
       await firestore.collection('walks').add({
         "userID" : uid,
         "date" : Timestamp.now(),
-        "time" : widget.stepCount,
+        "time" : widget.timeElapsed,
         "steps" : widget.stepCount,
         "distance" : widget.distanceTravelled.toString(),
         "avgRate" : avgRate.toString(),
@@ -65,7 +91,7 @@ class _EndWalkState extends State<EndWalk> {
         "avgStepVar" : avgStepLengthVar.toString(),
         "stepDur" : stepDur.toString(),
         "stepDurVar" : stepDurVar.toString(),
-        "freezes" : freezes.toString(),
+        "freezes" : widget.freezes.toString(),
         "avgRates" : avgRates,
       });
   }
@@ -125,6 +151,7 @@ class _EndWalkState extends State<EndWalk> {
                         thickness: 1,
                         color: Colors.black
                       ),
+
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
@@ -314,7 +341,7 @@ class _EndWalkState extends State<EndWalk> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                        "${avgSpeed.toStringAsFixed(1)} Meters per Second",
+                        "${avgSpeed.toStringAsFixed(1)} Meters/Second",
                         style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.black)
                     ),
                   ),
@@ -360,7 +387,7 @@ class _EndWalkState extends State<EndWalk> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                        "$avgStepLengthVar Meters",
+                        "${avgStepLengthVar.toStringAsFixed(1)} Meters",
                         style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.black)
                     ),
                   ),
@@ -406,7 +433,7 @@ class _EndWalkState extends State<EndWalk> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                        "$stepDurVar Seconds",
+                        "${stepDurVar.toStringAsFixed(1)} Seconds",
                         style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.black)
                     ),
                   ),
@@ -429,7 +456,7 @@ class _EndWalkState extends State<EndWalk> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                        "$freezes Freezes",
+                        "${widget.freezes} Freezes",
                         style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.black)
                     ),
                   ),

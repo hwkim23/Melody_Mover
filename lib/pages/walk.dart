@@ -60,7 +60,12 @@ class _WalkingState extends State<Walking> {
   String finalTime = "";
   String finalStepCount = "";
   double finalDistance = 0;
-
+  int freezes = 0;
+  List<int> stepCounts = [];
+  List<double> distances = [];
+  bool isFroze = false;
+  bool isStartedWalking = false;
+  bool isAddedSteps = false;
 
   @override
   void initState() {
@@ -203,6 +208,21 @@ class _WalkingState extends State<Walking> {
     });
   }
 
+  void saveTime(String time) {
+    setState(() {
+      finalTime = time;
+    });
+  }
+
+  void incrementFreeze() {
+    freezes++;
+  }
+
+  void addSteps() {
+    stepCounts.add(stepCount);
+    print("adding");
+  }
+
   bool isStarted = false;
   int startTime = 0;
   bool startChecking = true;
@@ -294,8 +314,22 @@ class _WalkingState extends State<Walking> {
                               finalTime = time.toString();
                               if (_status != "walking") {
                                 _stopWatchTimerWalk.onStopTimer();
+                                if (isFroze == false && time != 0 && isStartedWalking == true) {
+                                  incrementFreeze();
+                                  isFroze = true;
+                                }
                               } else {
+                                isFroze = false;
+                                isStartedWalking = true;
                                 _stopWatchTimerWalk.onStartTimer();
+                              }
+                              if (time != 0 && time % 60 != 0) {
+                                isAddedSteps = false;
+                              }
+                              if (time != 0 && time % 60 == 0 && isAddedSteps == false) {
+                                addSteps();
+                                isAddedSteps = true;
+                                distances.add(distanceTravelled);
                               }
                               return Text(
                                   time.toString(),
@@ -607,12 +641,21 @@ class _WalkingState extends State<Walking> {
                   reset();
                   setState(() {
                     tempo = 0;
-                    //finalStepCount = strStep;
                     finalDistance = distanceTravelled;
                   });
                   _stopWatchTimer.onResetTimer();
                   _stopWatchTimerWalk.onResetTimer();
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EndWalk(timeElapsed: finalTime, stepCount: finalStepCount, distanceTravelled: finalDistance)));
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => EndWalk(
+                              timeElapsed: finalTime,
+                              stepCount: finalStepCount,
+                              distanceTravelled: finalDistance,
+                              stepCounts: stepCounts,
+                              freezes: freezes,
+                              distances: distances,
+                          )));
                 },
                 child: const Text("End Walk", style: TextStyle(color: Colors.white, fontSize: 18))
               ),
@@ -621,12 +664,6 @@ class _WalkingState extends State<Walking> {
         ],
       ),
     );
-  }
-
-  void saveTime(String time) {
-    setState(() {
-      finalTime = time;
-    });
   }
 }
 
