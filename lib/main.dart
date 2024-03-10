@@ -53,6 +53,7 @@ class _MyAppState extends State<MyApp> {
 
     Map<Permission, PermissionStatus> statuses = await [
       Permission.activityRecognition,
+      Permission.location
     ].request();
     if (kDebugMode) {
       print(statuses[Permission.activityRecognition]);

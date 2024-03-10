@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:melody_mover/pages/endwalk.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
@@ -42,33 +43,34 @@ class _WalkingState extends State<Walking> {
   String strStep = "0";
   bool isPressed = false;
   int wpm = 0;
-  var wpms = [0, 0];
   bool isStart = false;
   bool isPause = false;
   double tempo = 0;
   bool soundEnabled = true;
-  //static AudioPlayer player = AudioPlayer();
   double distanceTravelled = 0;
   double startLatitude = 0;
   double startLongitude = 0;
   double currentLatitude = 0;
   double currentLongitude = 0;
-  late StreamSubscription<Position> positionStream;
   final StopWatchTimer _stopWatchTimer = StopWatchTimer();
   final StopWatchTimer _stopWatchTimerWalk = StopWatchTimer();
   final metronome = Metronome();
   double bpm = 120;
   double vol = 50;
+  String finalTime = "";
+  String finalStepCount = "";
+  double finalDistance = 0;
+
 
   @override
   void initState() {
-    metronome.init('assets/audio/243748__unfa__metronome-2khz-strong-pulse.wav', bpm: bpm, volume: vol);
-    //print("hi");
+    distanceTravelled = 0;
+    stepCount = 0;
+    metronome.init('assets/audio/metronome.wav', bpm: bpm, volume: vol);
     super.initState();
   }
 
   void start(double tempo) {
-    //metronome.setBPM(tempo);
     metronome.play(tempo);
   }
 
@@ -88,35 +90,27 @@ class _WalkingState extends State<Walking> {
     isPlaying = false;
   }
 
-  void measuringDistance() {
-    const LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10,
-    );
-    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen(
-            (Position? position) {
-          //print(position == null ? 'Unknown' : '${position.latitude.toString()}, ${position.longitude.toString()}');
-          setState(() {
-            currentLatitude = position!.latitude;
-            currentLongitude = position.longitude;
-          });
-        });
-
+  void listenLocation() async {
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
     setState(() {
-      distanceTravelled = GeolocatorPlatform.instance.distanceBetween(startLatitude, startLongitude, currentLatitude, currentLongitude);
+      currentLatitude = position.latitude;
+      currentLongitude = position.longitude;
+
+      if (_status == "walking") {
+        distanceTravelled += GeolocatorPlatform.instance.distanceBetween(startLatitude, startLongitude, currentLatitude, currentLongitude);
+      }
+
+      startLatitude = currentLatitude;
+      startLongitude = currentLongitude;
     });
   }
 
   @override
   void dispose() {
-    positionStream.cancel();
     super.dispose();
   }
 
   void onStepCount(StepCount event) {
-    if (kDebugMode) {
-      print(event);
-    }
     setState(() {
       if (isOne == true) {
         stepCount = 0;
@@ -294,13 +288,15 @@ class _WalkingState extends State<Walking> {
                             initialData: _stopWatchTimer.secondTime.value,
                             builder: (context, snap) {
                               final time = snap.data;
-
+                              if (time! % 5 == 0) {
+                                listenLocation();
+                              }
+                              finalTime = time.toString();
                               if (_status != "walking") {
                                 _stopWatchTimerWalk.onStopTimer();
                               } else {
                                 _stopWatchTimerWalk.onStartTimer();
                               }
-
                               return Text(
                                   time.toString(),
                                   style: TextStyle(fontSize:40, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
@@ -309,7 +305,6 @@ class _WalkingState extends State<Walking> {
                           ),
                       ),
                     ),
-
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Container(
@@ -374,7 +369,7 @@ class _WalkingState extends State<Walking> {
                       child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
-                              "$distanceTravelled Meters",
+                              "${distanceTravelled.toStringAsFixed(1)} Meters",
                               style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
                           )
                       ),
@@ -384,7 +379,7 @@ class _WalkingState extends State<Walking> {
                       child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
-                              "Steps Walked",
+                              "Steps Taken",
                               style: TextStyle(fontSize:13, fontWeight: FontWeight.w600, color: !isPause ? const Color(0xffD1EFFF) : const Color(0xff0496FF))
                           )
                       ),
@@ -412,6 +407,7 @@ class _WalkingState extends State<Walking> {
                               } else if (value != 0) {
                                 wpm = (((stepCount) / value!) * 60).round();
                               }
+                              finalStepCount = stepCount.toString();
                               return Text(
                                   "$strStep Steps",
                                   style: TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: !isPause ? Colors.white : Colors.black)
@@ -510,31 +506,45 @@ class _WalkingState extends State<Walking> {
                         )
                     ),
                     onPressed: () async {
+                      if (selectedCue == "Metronome") {
+                        await metronome.setAudioAssets('assets/audio/metronome.wav');
+                      } else if (selectedCue == "Footfall") {
+                        await metronome.setAudioAssets('assets/audio/footfall.wav');
+                      } else if (selectedCue == "Verbal Cue") {
+                        await metronome.setAudioAssets('assets/audio/verbalcue.wav');
+                      }
+
                       if (selectedRate != "Auto") {
+                        stepCount = 0;
+                        distanceTravelled = 0;
                         tempo = double.parse(selectedRate.substring(0, 2));
                         startWalking();
                         start(tempo);
                         _stopWatchTimer.onStartTimer();
                         _stopWatchTimerWalk.onStartTimer();
                         initPlatformState();
-                        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+                        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
                         setState(() {
                           startLatitude = position.latitude;
                           startLongitude = position.longitude;
+                          currentLatitude = position.latitude;
+                          currentLongitude = position.longitude;
                         });
-                        //measuringDistance();
                       } else {
+                        stepCount = 0;
+                        distanceTravelled = 0;
                         startWalking();
                         _stopWatchTimer.onStartTimer();
                         _stopWatchTimerWalk.onStartTimer();
                         tempo = 0;
                         initPlatformState();
-                        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+                        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
                         setState(() {
                           startLatitude = position.latitude;
                           startLongitude = position.longitude;
+                          currentLatitude = position.latitude;
+                          currentLongitude = position.longitude;
                         });
-                        //measuringDistance();
                       }
                     },
                     child: const Text("Start Session", style: TextStyle(color: Colors.white, fontSize: 18))
@@ -565,12 +575,8 @@ class _WalkingState extends State<Walking> {
                       } else {
                         resumeWalking();
                         startWalking();
-                        /*_timer = _scheduleTimer(
-                          _calculateTimerInterval(tempo.round()),
-                        );*/
                         _stopWatchTimer.onStartTimer();
                         _stopWatchTimerWalk.onStartTimer();
-                        //await _timer.start();
                         metronome.play(tempo);
                       }
                     },
@@ -593,17 +599,20 @@ class _WalkingState extends State<Walking> {
                   )
                 ),
                 onPressed: () async {
-                  //TODO: End function
+                  //TODO: End function with firestore upload
                   stopWalking();
                   stop();
-                  //await _timer.stop();
-                  _stopWatchTimer.onResetTimer();
-                  _stopWatchTimerWalk.onResetTimer();
-                  positionStream.cancel();
+                  _stopWatchTimer.onStopTimer();
+                  _stopWatchTimerWalk.onStopTimer();
                   reset();
                   setState(() {
                     tempo = 0;
+                    //finalStepCount = strStep;
+                    finalDistance = distanceTravelled;
                   });
+                  _stopWatchTimer.onResetTimer();
+                  _stopWatchTimerWalk.onResetTimer();
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EndWalk(timeElapsed: finalTime, stepCount: finalStepCount, distanceTravelled: finalDistance)));
                 },
                 child: const Text("End Walk", style: TextStyle(color: Colors.white, fontSize: 18))
               ),
@@ -612,6 +621,12 @@ class _WalkingState extends State<Walking> {
         ],
       ),
     );
+  }
+
+  void saveTime(String time) {
+    setState(() {
+      finalTime = time;
+    });
   }
 }
 
