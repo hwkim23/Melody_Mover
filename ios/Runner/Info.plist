@@ -38,16 +38,16 @@
 			<string>The example App requires temporary access to the device's precise location.</string>
 		</dict>
 		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
 		<key>NSMotionUsageDescription</key>
 		<string>This application tracks your steps</string>
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>processing</string>
-		</array>
-		<array>
-			<string>UIInterfaceOrientationPortrait</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>UISupportedInterfaceOrientations~ipad</key>
 		<array>
