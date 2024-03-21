@@ -39,7 +39,15 @@ Before you begin, ensure that you have Flutter installed on your system. If you 
    cd melody_mover
    ```
 
-2. **Flutter Upgrade**
+2. **Flutter Doctor**
+
+   Ensure that all your Flutter dependencies are up to date and properly configured.
+
+   ```bash
+   flutter doctor
+   ```
+
+3. **Flutter Upgrade**
 
    It's crucial to have the latest version of Flutter. Run the following command to upgrade Flutter to the latest version.
 
@@ -47,7 +55,7 @@ Before you begin, ensure that you have Flutter installed on your system. If you 
    flutter upgrade
    ```
 
-3. **Get Dependencies**
+4. **Get Dependencies**
 
    Run the following command to fetch all the required dependencies listed in the `pubspec.yaml` file.
 
@@ -55,7 +63,7 @@ Before you begin, ensure that you have Flutter installed on your system. If you 
    flutter pub get
    ```
 
-4. **Generate Launcher Icons and Splash Screen**
+5. **Generate Launcher Icons and Splash Screen**
 
    To generate custom launcher icons and splash screen for both Android and iOS platforms, run:
 
@@ -64,7 +72,7 @@ Before you begin, ensure that you have Flutter installed on your system. If you 
    flutter pub run flutter_native_splash:create
    ```
 
-5. **Run the Application**
+6. **Run the Application**
 
    After all dependencies are fetched, and assets are generated, you can run the application on a connected device or an emulator.
 
