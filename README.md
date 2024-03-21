@@ -19,3 +19,66 @@ Cueing is not only beneficial in overcoming freezing but may lead to greater ben
 European guidelines strongly recommend cueing for the treatment of PD. A review of studies including 324 subjects demonstrated decreased freezing and improved gait timing with cueing. Despite these benefits, cueing strategies are often DIY and unsophisticated. Patients may use walkers with laser-projected lines, metronomes, or homemade playlists to cue. Recent studies have demonstrated benefits with more sophisticated and nuanced cues. Action-relevant cues, such as the sound of a footfall, are more effective than standard metronome cues. Intelligent cues, timed to rescue freezing or anticipate it, are more effective than continuous cues. Custom cues, that preserve the biological variability of interstride intervals, are more likely to prevent falls than fixed cues4. Given these findings, there is an opportunity to develop an improved cueing platform for PD patients to overcome freezing and facilitate movement and exercise.
 
 
+
+
+# Usage & Installation
+
+
+## Prerequisites
+
+Before you begin, ensure that you have Flutter installed on your system. If you haven't installed Flutter yet, please follow the installation guide here: [Flutter Install](https://flutter.dev/docs/get-started/install).
+
+## Getting Started
+
+1. **Clone the Repository**
+
+   First, clone the repository to your local machine using Git.
+
+   ```bash
+   git clone [repository URL]
+   cd melody_mover
+   ```
+
+2. **Flutter Upgrade**
+
+   It's crucial to have the latest version of Flutter. Run the following command to upgrade Flutter to the latest version.
+
+   ```bash
+   flutter upgrade
+   ```
+
+3. **Get Dependencies**
+
+   Run the following command to fetch all the required dependencies listed in the `pubspec.yaml` file.
+
+   ```bash
+   flutter pub get
+   ```
+
+4. **Generate Launcher Icons and Splash Screen**
+
+   To generate custom launcher icons and splash screen for both Android and iOS platforms, run:
+
+   ```bash
+   flutter pub run flutter_launcher_icons:main
+   flutter pub run flutter_native_splash:create
+   ```
+
+5. **Run the Application**
+
+   After all dependencies are fetched, and assets are generated, you can run the application on a connected device or an emulator.
+
+   ```bash
+   flutter run
+   ```
+
+## Troubleshooting
+
+If you encounter any issues during the setup or while running the application, ensure that:
+
+- Your Flutter environment is set up correctly.
+- You have run `flutter pub get` to download all dependencies.
+- You are using a supported version of the Dart SDK as specified in `pubspec.yaml`.
+
+For further assistance, consult the Flutter documentation or reach out to the Flutter community.
+
