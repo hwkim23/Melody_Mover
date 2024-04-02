@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:melody_mover/pages/home.dart';
 import 'package:melody_mover/pages/stats.dart';

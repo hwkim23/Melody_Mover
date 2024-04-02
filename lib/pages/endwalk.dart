@@ -13,7 +13,6 @@ import 'package:melody_mover/drawer.dart';
 import 'package:provider/provider.dart';
 import '../bottomnavigationbar.dart';
 import '../store.dart';
-import 'mainpage.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 class EndWalk extends StatefulWidget {
@@ -176,7 +175,8 @@ class _EndWalkState extends State<EndWalk> {
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
                   color: const Color(0xffD1EFFF),
-                  borderRadius: BorderRadius.circular(10.0)
+                  borderRadius: BorderRadius.circular(10.0),
+                  border: Border.all(color: Colors.blue)
                 ),
                 child: Padding(
                   padding: const EdgeInsets.only(left: 13, right: 15, top: 15),
@@ -196,7 +196,6 @@ class _EndWalkState extends State<EndWalk> {
                         thickness: 1,
                         color: Colors.black
                       ),
-
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
@@ -232,7 +231,7 @@ class _EndWalkState extends State<EndWalk> {
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           child: Text(
-                            widget.stepCount,
+                            "${widget.stepCount} Steps",
                               style: const TextStyle(fontSize:24, fontWeight: FontWeight.w600, color: Colors.black)
                           ),
                         ),
@@ -284,7 +283,6 @@ class _EndWalkState extends State<EndWalk> {
                         )
                     ),
                     onPressed: () async {
-                      //TODO: Share function
                       Navigator.push(context, MaterialPageRoute(builder: (context) => SharePost(timeElapsed: widget.timeElapsed, stepCount: widget.stepCount)));
                     },
                     child: const Text("Share", style: TextStyle(color: Colors.white, fontSize: 18))
@@ -301,7 +299,7 @@ class _EndWalkState extends State<EndWalk> {
                           borderRadius: BorderRadius.all(Radius.circular(10))),
                     ),
                     onPressed: () {
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainPage()));
+                      context.read<Store1>().onItemTapped(1);
                     },
                     child: const Text("Back Home", style: TextStyle(color: Color(0xff0496FF), fontSize: 18))
                 ),
@@ -587,9 +585,6 @@ class _EndWalkState extends State<EndWalk> {
   }
 }
 
-final TextEditingController _titleController = TextEditingController();
-final TextEditingController _textController = TextEditingController();
-
 class SharePost extends StatefulWidget {
   final String timeElapsed;
   final String stepCount;
@@ -601,6 +596,8 @@ class SharePost extends StatefulWidget {
 
 class _SharePostState extends State<SharePost> {
   final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _textController = TextEditingController();
 
   Future<void> _uploadCamera() async {
     final pickedImage =
@@ -630,6 +627,11 @@ class _SharePostState extends State<SharePost> {
   firebase_storage.FirebaseStorage storage = firebase_storage.FirebaseStorage.instance;
   bool isSelected = false;
 
+  void unselectImage() {
+    setState(() {
+      isSelected = false;
+    });
+  }
 
   //Method to crop the selected image in to fixed ratio of 1 to 1
   Future<void> _cropImage() async {
@@ -643,6 +645,7 @@ class _SharePostState extends State<SharePost> {
           _croppedFile = croppedFile;
           fileName = path.basename(_croppedFile!.path);
           imageFile = File(_croppedFile!.path);
+          isSelected = true;
         });
       }
     }
@@ -674,9 +677,12 @@ class _SharePostState extends State<SharePost> {
   }
 
   final firestore = FirebaseFirestore.instance;
+  final List<Map<String, String>> comments = [];
+  final List<String> likes = [];
 
   @override
   Widget build(BuildContext context) {
+    //TODO
     final width = MediaQuery.of(context).size.width;
     final FirebaseAuth auth = FirebaseAuth.instance;
     final uid = auth.currentUser?.uid;
@@ -690,9 +696,25 @@ class _SharePostState extends State<SharePost> {
             children: <Widget>[
               Container(
                 margin: const EdgeInsets.only(bottom: 15),
-                child: const Align(
-                  alignment: Alignment.center,
-                  child: Text("Share Some\nPositivity!", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: GestureDetector(
+                        child: const Icon(Icons.arrow_back_ios, color: Color(0xffACACAC),),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                    const Flexible(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: Text("Share Some\nPositivity!", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Container(
@@ -721,7 +743,6 @@ class _SharePostState extends State<SharePost> {
                           thickness: 1,
                           color: Color(0xffD1EFFF)
                       ),
-
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
@@ -797,7 +818,7 @@ class _SharePostState extends State<SharePost> {
               ),
               Container(
                 width: double.infinity,
-                height: 600,
+                height: 400,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
                     color: const Color(0xff0496FF),
@@ -850,7 +871,7 @@ class _SharePostState extends State<SharePost> {
                         ),
                         Container(
                           width: double.infinity,
-                          height: 200,
+                          height: 50,
                           margin: const EdgeInsets.only(bottom: 15),
                           child: TextFormField(
                               controller: _textController,
@@ -887,7 +908,7 @@ class _SharePostState extends State<SharePost> {
                           ),
                         ),
                         Container(
-                          margin: const EdgeInsets.only(bottom: 50),
+                          //margin: const EdgeInsets.only(bottom: 10),
                           height: 50,
                           width: double.infinity,
                           child: isSelected == false ? OutlinedButton(
@@ -960,9 +981,19 @@ class _SharePostState extends State<SharePost> {
                             },
                             child: const Text("Add Media", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                           ) : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              Text(fileName),
-                              IconButton(onPressed: (){}, icon: const Icon(Icons.delete_outline))
+                              Flexible(
+                                fit: FlexFit.tight,
+                                child: Text(fileName, style: const TextStyle(color: Colors.white),)
+                              ),
+                              Container(
+                                width: 30,
+                                color: Colors.blue,
+                                child: IconButton(onPressed: () {
+                                  unselectImage();
+                                }, icon: const Icon(Icons.delete_outline, color: Colors.white,)),
+                              )
                             ],
                           ),
                         ),
@@ -985,16 +1016,22 @@ class _SharePostState extends State<SharePost> {
                         )
                     ),
                     onPressed: () async {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Please wait")));
                       await uploadImage(imageFile);
                       try {
-                        await firestore.collection('posts').doc().set({
+                        await firestore.collection('posts').add({
                           'imageURL' : imageURL,
                           'title' : _titleController.text,
                           'caption' : _textController.text,
+                          'date' : Timestamp.now(),
+                          'comments' : comments,
+                          'likes' : likes,
                           'uploader' : uid
                         });
                       } catch (e) {
-                        SnackBar(content: Text("Error: $e"));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Error caused during the uploading")));
                       }
                       toSuccessfulPost();
                     },
@@ -1020,6 +1057,75 @@ class SuccessfulPost extends StatefulWidget {
 class _SuccessfulPostState extends State<SuccessfulPost> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    final width = MediaQuery.of(context).size.width;
+    return Scaffold(
+      appBar: BaseAppBar(appBar: AppBar()),
+      drawer: const BaseDrawer(),
+      body: context.watch<Store1>().selectedIndex == -1 ? Padding(
+        padding: EdgeInsets.only(left: width * 0.05, right: width * 0.05, top: 30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(bottom: 15),
+              child: const Align(
+                alignment: Alignment.center,
+                child: Text("Successfully\nPosted!", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(bottom: 15),
+              child: const Align(
+                alignment: Alignment.center,
+                child: Text(
+                  "The Melody Mover community loves seeing\nwhat you’re up to! Keep it up!",
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 20),
+              height: 50,
+              child: FilledButton(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(const Color(0xff0496FF)),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0)
+                          )
+                      )
+                  ),
+                  onPressed: () async {
+                    context.read<Store1>().onItemTapped(1);
+                  },
+                  child: const Text("See Other Posts", style: TextStyle(color: Colors.white, fontSize: 18))
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 20),
+              height: 50,
+              child: FilledButton(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(const Color(0xff0496FF)),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0)
+                          )
+                      )
+                  ),
+                  onPressed: () async {
+                    //TODO: SNS function
+                  },
+                  child: const Text("Share to Other Platforms", style: TextStyle(color: Colors.white, fontSize: 18))
+              ),
+            )
+          ],
+        ),
+      ) : context.watch<Store1>().pages.elementAt(context.watch<Store1>().selectedIndex),
+      bottomNavigationBar: const BaseBottomNavigationBar(),
+    );
   }
 }

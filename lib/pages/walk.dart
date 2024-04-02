@@ -6,12 +6,13 @@ import 'package:pedometer/pedometer.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
 import 'package:metronome/metronome.dart';
+import 'package:flutter/services.dart';
 
 final Map<int, List<String>> cues = {
   0: ["Metronome", "Provides a beat for you to follow, with or without music."],
   1: ["Footfall", "Plays footfall noises at your selected pace."],
   2: ["Verbal Cue", "Plays selected or custom verbal cue at the selected pace."],
-  3: ["Video", "Plays a video of someone walking, with or without sound."]
+  3: ["Haptic Feedback", "Plays a haptic feedback at your selected pace."]
 };
 final Map<int, List<String>> rates = {
   0: ["Auto", "Auto detects your pace"],
@@ -66,6 +67,7 @@ class _WalkingState extends State<Walking> {
   bool isFroze = false;
   bool isStartedWalking = false;
   bool isAddedSteps = false;
+  Timer? _timerHaptic;
 
   @override
   void initState() {
@@ -77,6 +79,21 @@ class _WalkingState extends State<Walking> {
 
   void start(double tempo) {
     metronome.play(tempo);
+  }
+
+  void _startHapticFeedbackLoop(double tempo) {
+    final int interval = 60000 ~/ tempo; // Convert BPM to interval in milliseconds
+    _timerHaptic?.cancel();
+    _timerHaptic = Timer.periodic(Duration(milliseconds: interval), (timer) {
+      if (!isPause) {
+        HapticFeedback.heavyImpact(); // Trigger haptic feedback
+      }
+    });
+  }
+
+  void _stopHapticFeedbackLoop() {
+    _timerHaptic?.cancel();
+    _timerHaptic = null;
   }
 
   bool isPlaying = false;
@@ -112,6 +129,7 @@ class _WalkingState extends State<Walking> {
 
   @override
   void dispose() {
+    _stopHapticFeedbackLoop();
     super.dispose();
   }
 
@@ -220,7 +238,6 @@ class _WalkingState extends State<Walking> {
 
   void addSteps() {
     stepCounts.add(stepCount);
-    print("adding");
   }
 
   bool isStarted = false;
@@ -283,7 +300,8 @@ class _WalkingState extends State<Walking> {
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                   color: !isPause ? const Color(0xff0496FF) : const Color(0xffD1EFFF),
-                  borderRadius: BorderRadius.circular(10.0)
+                  borderRadius: BorderRadius.circular(10.0),
+                  border: Border.all(color: Colors.blue)
               ),
               child: Padding(
                 padding: const EdgeInsets.only(left: 13, right: 15, top: 15),
@@ -427,13 +445,16 @@ class _WalkingState extends State<Walking> {
                             initialData: _stopWatchTimerWalk.secondTime.value,
                             builder: (context, snap) {
                               final value = snap.data;
-                              //print(value);
                               if (selectedRate == "Auto" && value! >= 5 && value % 5 == 0) {
                                 wpm = (((stepCount) / value) * 60).round();
                                 tempo = wpm.toDouble();
                                 if (isStarted == false) {
                                   isStarted = true;
-                                  changeBPM(tempo);
+                                  if (selectedCue != "Haptic Feedback") {
+                                    changeBPM(tempo);
+                                  } else {
+                                    _startHapticFeedbackLoop(tempo);
+                                  }
                                   isStarted = true;
                                 } else {
                                   isStarted = false;
@@ -553,7 +574,11 @@ class _WalkingState extends State<Walking> {
                         distanceTravelled = 0;
                         tempo = double.parse(selectedRate.substring(0, 2));
                         startWalking();
-                        start(tempo);
+                        if (selectedCue != "Haptic Feedback") {
+                          start(tempo);
+                        } else {
+                          _startHapticFeedbackLoop(tempo);
+                        }
                         _stopWatchTimer.onStartTimer();
                         _stopWatchTimerWalk.onStartTimer();
                         initPlatformState();
@@ -605,13 +630,17 @@ class _WalkingState extends State<Walking> {
                         pauseWalking();
                         _stopWatchTimer.onStopTimer();
                         _stopWatchTimerWalk.onStopTimer();
-                        metronome.stop();
+                        if (selectedCue != "Haptic Feedback") {
+                          metronome.stop();
+                        }
                       } else {
                         resumeWalking();
                         startWalking();
                         _stopWatchTimer.onStartTimer();
                         _stopWatchTimerWalk.onStartTimer();
-                        metronome.play(tempo);
+                        if (selectedCue != "Haptic Feedback") {
+                          metronome.play(tempo);
+                        }
                       }
                     },
                     child: Text(!isPause ? "Pause Walk" : "Resume", style: const TextStyle(color: Colors.white, fontSize: 18))
@@ -633,8 +662,12 @@ class _WalkingState extends State<Walking> {
                   )
                 ),
                 onPressed: () async {
+                  if (selectedCue == "Haptic Feedback") {
+                    _stopHapticFeedbackLoop();
+                  } else {
+                    stop();
+                  }
                   stopWalking();
-                  stop();
                   _stopWatchTimer.onStopTimer();
                   _stopWatchTimerWalk.onStopTimer();
                   reset();
