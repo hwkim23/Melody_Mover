@@ -34,6 +34,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   List<dynamic> likes = [];
   bool isLoading = true;
   List<bool> isLiked = [];
+  List<List<bool>> isLikedComment = [];
   String uid = "";
   var friendsList = [];
   bool showCommentOverlay = false;
@@ -76,6 +77,17 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           isLiked.add(true);
         } else {
           isLiked.add(false);
+        }
+        for (var comment in comments) {
+          List<bool> isLikedCommentPost = [];
+          for (int i = 0; i < comment.length; i++) {
+            if (comment[i]["likes"].contains(uid)) {
+              isLikedCommentPost.add(true);
+            } else {
+              isLikedCommentPost.add(false);
+            }
+          }
+          isLikedComment.add(isLikedCommentPost);
         }
         var nameData = await firestore.collection("users").get();
         for (var userDoc in nameData.docs) {
@@ -162,6 +174,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       color: const Color(0xff0496FF)
                     ),
                     labelColor: Colors.white,
+                    dividerColor: Colors.transparent,
                     unselectedLabelColor: const Color(0xff0496FF),
                     tabs: const [
                       Tab(text: "Friends"),
@@ -563,7 +576,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: ListView.builder(
                             shrinkWrap: true,
-                            //TODO: Change comments[0] to selected post's index
                             itemCount: comments[selectedIndex].length,
                             itemBuilder: (BuildContext c, int index) {
                               commentUploader = comments[selectedIndex][index]["full_name"];
@@ -628,24 +640,24 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                         backgroundColor: MaterialStateProperty.all(const Color(0xffD1EFFF))
                                                     ),
                                                     onPressed: () async {
-                                                      /*setState(() {
-                                                                isLiked[index] = !isLiked[index];
-                                                              });
-                                                              var result = await firestore.collection('posts').doc(docIDs[index]).get();
-                                                              var data = result.data();
-                                                              List<dynamic> likes = data?['likes'];
-                                                              if (isLiked[index]) {
-                                                                likes.add(uid);
-                                                              } else {
-                                                                likes.remove(uid);
-                                                              }
-                                                              firestore.collection('posts')
-                                                                  .doc(docIDs[index])
-                                                                  .set({
-                                                                'likes': likes
-                                                              },SetOptions(merge: true));*/
+                                                      setState(() {
+                                                        isLikedComment[selectedIndex][index] = !isLikedComment[selectedIndex][index];
+                                                      });
+                                                      var result = await firestore.collection('posts').doc(docIDs[index]).get();
+                                                      var data = result.data();
+                                                      List<dynamic> comments = data?['comments'];
+                                                      if (isLikedComment[selectedIndex][index]) {
+                                                        comments[index]['likes'].add(uid);
+                                                      } else {
+                                                        comments[index]['likes'].remove(uid);
+                                                      }
+                                                      firestore.collection('posts')
+                                                          .doc(docIDs[index])
+                                                          .set({
+                                                        'comments': comments
+                                                      },SetOptions(merge: true));
                                                     },
-                                                    child: const Icon(Icons.favorite_border, color: Colors.blue,),
+                                                    child: !isLikedComment[selectedIndex][index] ? const Icon(Icons.favorite_border, color: Colors.blue,) : const Icon(Icons.favorite, color: Colors.redAccent,),
                                                   ),
                                                 ),
                                                 SizedBox(
@@ -661,21 +673,21 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                     ),
                                                     onPressed: () async {
                                                       /*setState(() {
-                                                                isLiked[index] = !isLiked[index];
-                                                              });
-                                                              var result = await firestore.collection('posts').doc(docIDs[index]).get();
-                                                              var data = result.data();
-                                                              List<dynamic> likes = data?['likes'];
-                                                              if (isLiked[index]) {
-                                                                likes.add(uid);
-                                                              } else {
-                                                                likes.remove(uid);
-                                                              }
-                                                              firestore.collection('posts')
-                                                                  .doc(docIDs[index])
-                                                                  .set({
-                                                                'likes': likes
-                                                              },SetOptions(merge: true));*/
+                                                        isLiked[index] = !isLiked[index];
+                                                      });
+                                                      var result = await firestore.collection('posts').doc(docIDs[index]).get();
+                                                      var data = result.data();
+                                                      List<dynamic> likes = data?['likes'];
+                                                      if (isLiked[index]) {
+                                                        likes.add(uid);
+                                                      } else {
+                                                        likes.remove(uid);
+                                                      }
+                                                      firestore.collection('posts')
+                                                          .doc(docIDs[index])
+                                                          .set({
+                                                        'likes': likes
+                                                      },SetOptions(merge: true));*/
                                                     },
                                                     child: const Icon(Icons.subdirectory_arrow_left_outlined, color: Colors.blue),
                                                   ),

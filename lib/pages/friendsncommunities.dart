@@ -97,6 +97,7 @@ class _FnCState extends State<FnC> with TickerProviderStateMixin {
                         color: const Color(0xff0496FF)
                     ),
                     labelColor: Colors.white,
+                    dividerColor: Colors.transparent,
                     unselectedLabelColor: const Color(0xff0496FF),
                     tabs: const [
                       Tab(text: "Friends"),
