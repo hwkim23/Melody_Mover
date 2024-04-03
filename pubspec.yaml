@@ -59,6 +59,11 @@ dependencies:
   image_cropper: ^5.0.1
   path: ^1.8.3
   firebase_storage: ^11.6.9
+  #All this is for spotify 
+  spotify: ^0.13.5
+  flutter_web_auth_2: ^2.2.1
+  oauth2_client: ^3.0.0
+  http: ^1.2.0
 
 flutter_launcher_icons:
   image_path_android: "assets/image/icon-710x599-android.png"

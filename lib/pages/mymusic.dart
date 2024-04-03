@@ -4,6 +4,7 @@ import '../appbar.dart';
 import '../bottomnavigationbar.dart';
 import '../drawer.dart';
 import '../store.dart';
+import 'package:spotify/spotify.dart';
 
 class MyMusic extends StatefulWidget {
   const MyMusic({super.key});
@@ -50,3 +51,6 @@ class _MyMusicState extends State<MyMusic> {
     );
   }
 }
+
+
+//Spotify Implementation
