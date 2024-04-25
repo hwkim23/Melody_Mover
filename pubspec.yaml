@@ -64,6 +64,7 @@ dependencies:
   flutter_web_auth_2: ^2.2.1
   oauth2_client: ^3.0.0
   http: ^1.2.0
+  just_audio: ^0.9.6
 
 flutter_launcher_icons:
   image_path_android: "assets/image/icon-710x599-android.png"
