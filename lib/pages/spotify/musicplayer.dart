@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 
 class PlayerWidget extends StatefulWidget {
   final String trackUrl;
+  final String? artworkUrl; // Optional artwork URL for the track
 
   const PlayerWidget({
     required this.trackUrl,
+    this.artworkUrl,
     Key? key,
   }) : super(key: key);
 
@@ -24,12 +26,6 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   StreamSubscription? _playerCompleteSubscription;
   StreamSubscription? _playerStateSubscription;
 
-  bool get _isPlaying => player.state == PlayerState.playing;
-  bool get _isPaused => player.state == PlayerState.paused;
-
-  String get _durationText => _duration.toString().split('.').first;
-  String get _positionText => _position.toString().split('.').first;
-
   @override
   void initState() {
     super.initState();
@@ -38,41 +34,35 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   }
 
   void initializePlayer() async {
-    await player.setSourceUrl(widget.trackUrl);
+    await player.setSourceUrl(widget.trackUrl); // Initial source setup for the player
     _initStreams();
   }
 
   void _initStreams() {
     _durationSubscription = player.onDurationChanged.listen((duration) {
-      setState(() {
-        _duration = duration;
-      });
+      setState(() => _duration = duration);
     });
 
     _positionSubscription = player.onPositionChanged.listen((position) {
-      setState(() {
-        _position = position;
-      });
+      setState(() => _position = position);
     });
 
     _playerCompleteSubscription = player.onPlayerComplete.listen((event) {
-      setState(() {
-        _position = Duration.zero;
-      });
+      setState(() => _position = Duration.zero);
     });
 
     _playerStateSubscription = player.onPlayerStateChanged.listen((state) {
-      setState(() {}); // Just update the state to reflect UI changes
+      setState(() {});
     });
   }
 
   @override
   void dispose() {
-    player.dispose();
     _durationSubscription?.cancel();
     _positionSubscription?.cancel();
     _playerCompleteSubscription?.cancel();
     _playerStateSubscription?.cancel();
+    player.dispose();
     super.dispose();
   }
 
@@ -82,33 +72,32 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
+        if (widget.artworkUrl != null)
+          Image.network(widget.artworkUrl!),
         Slider(
           min: 0.0,
-          max: (_duration.inSeconds > 0) ? _duration.inSeconds.toDouble() : 1.0,
-          value:
-              (_position.inSeconds > 0) ? _position.inSeconds.toDouble() : 0.0,
-          onChanged: (value) {
-            player.seek(Duration(seconds: value.toInt()));
-          },
+          max: _duration.inSeconds.toDouble(),
+          value: _position.inSeconds.toDouble(),
+          onChanged: (value) => player.seek(Duration(seconds: value.toInt())),
         ),
         Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              onPressed: _isPlaying ? null : () => player.resume(),
-              icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+              onPressed: player.state == PlayerState.playing ? () => player.pause() : () => player.resume(),
+              icon: Icon(player.state == PlayerState.playing ? Icons.pause : Icons.play_arrow),
               color: color,
             ),
             IconButton(
-              onPressed: (_isPlaying || _isPaused) ? () => player.stop() : null,
+              onPressed: () => player.stop(),
               icon: const Icon(Icons.stop),
               color: color,
             ),
           ],
         ),
         Text(
-          '${_positionText} / ${_durationText}',
-          style: const TextStyle(fontSize: 16.0),
+          '${_position.toString().split('.').first} / ${_duration.toString().split('.').first}',
+          style: TextStyle(fontSize: 16.0),
         ),
       ],
     );
