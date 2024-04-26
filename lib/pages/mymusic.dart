@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../appbar.dart';
 import '../bottomnavigationbar.dart';
@@ -19,8 +17,6 @@ class MyMusic extends StatefulWidget {
 }
 
 class _MyMusicState extends State<MyMusic> {
-  final firestore = FirebaseFirestore.instance;
-  final FirebaseAuth auth = FirebaseAuth.instance;
   List<PlaylistSimple>? _playlists;
   SpotifyApi? spotifyApi;
   List<Track>? _tracks; // Assuming Track is the correct type
@@ -36,11 +32,7 @@ class _MyMusicState extends State<MyMusic> {
   }
 
   Future<void> _initializeSpotify() async {
-    var result = await firestore.collection("users").get();
-    for (var doc in result.docs) {
-      clientId = doc["clientId"];
-      clientSecret = doc["clientSecret"];
-    }
+
     final accessTokenResult = await SpotifyAuth.getAccessToken();
     if (accessTokenResult != null &&
         accessTokenResult['access_token'] != null) {

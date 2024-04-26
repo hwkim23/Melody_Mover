@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
 
@@ -6,8 +8,8 @@ import 'package:http/http.dart' as http;
 // Ensure CLIENT_SECRET is handled securely and consider moving it to a backend in production
 
 class SpotifyAuth {
-  static const String clientId = 'd73794ac45a944ba8702d084ce52280c';
-  static const String clientSecret = 'da49d565cbbf48f597dc8fd5f6984303'; // Handle securely
+  String clientId = '';
+  String clientSecret = ''; // Handle securely
   static const String redirectUri = 'my.music.app://callback';
   static const List<String> scopes = [
     'user-read-private',
@@ -16,8 +18,16 @@ class SpotifyAuth {
     'user-read-currently-playing',
     'user-read-email'
   ];
+  final firestore = FirebaseFirestore.instance;
+  final FirebaseAuth auth = FirebaseAuth.instance;
 
-  static Future<Map<String, dynamic>?> getAccessToken() async {
+  Future<Map<String, dynamic>?> getAccessToken() async {
+    var resultDoc = await firestore.collection("users").get();
+    for (var doc in resultDoc.docs) {
+      clientId = doc["clientId"];
+      clientSecret = doc["clientSecret"];
+    }
+
     final authUrl = Uri.https('accounts.spotify.com', '/authorize', {
       'response_type': 'code',
       'client_id': clientId,
