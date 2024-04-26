@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:melody_mover/pages/notifications.dart';
+import 'package:melody_mover/pages/profile.dart';
 import 'package:melody_mover/store.dart';
 import 'package:provider/provider.dart';
 
@@ -17,20 +18,52 @@ class BaseAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0.0,
       backgroundColor: Colors.transparent,
       actions: [
-        IconButton(
+        SizedBox(
+          height: 50,
+          width: 50,
+          child: Stack(
+            children: [
+              Center(
+                child: IconButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Notifications()));
+                    },
+                    icon: const Icon(Icons.notifications, color: Colors.grey)),
+              ),
+              Visibility(
+                //visible: ,
+                child: Positioned(
+                  top: 13,
+                  right: 13,
+                  child: Container(
+                    height: 10,
+                    width: 10,
+                    decoration: BoxDecoration(
+                        color: const Color(0xffF06543),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.transparent)
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+        context.watch<Store1>().profileURL.isEmpty ? IconButton(
           onPressed: () {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Notifications()));
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
           },
-          icon: context.watch<Store1>().hasUnread
-            //TODO: Change icon
-            ? const Icon(Icons.notification_add)
-            : const Icon(Icons.notifications, color: Colors.grey)),
-        //TODO: Change to round user image button
-        IconButton(
-            onPressed: () {
-              //TODO: Account function
-            },
-            icon: const Icon(Icons.account_circle)),
+          icon: const Icon(Icons.account_circle, size: 50,)
+        ) : GestureDetector(
+          onTap: () {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
+          },
+          child: CircleAvatar(
+            backgroundColor: Colors.white,
+            radius: 25, // Image radius
+            backgroundImage: NetworkImage(context.watch<Store1>().profileURL),
+          ),
+        ),
       ]
     );
   }

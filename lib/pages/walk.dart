@@ -446,7 +446,7 @@ class _WalkingState extends State<Walking> {
                             builder: (context, snap) {
                               final value = snap.data;
                               if (selectedRate == "Auto" && value! >= 5 && value % 5 == 0) {
-                                wpm = (((stepCount) / value) * 60).round();
+                                wpm = (((stepCount-1.5) / value) * 60).round();
                                 tempo = wpm.toDouble();
                                 if (isStarted == false) {
                                   isStarted = true;
@@ -504,7 +504,7 @@ class _WalkingState extends State<Walking> {
                       child: SizedBox(
                         width: double.infinity,
                         height: 55,
-                        child: CustomDropdownMenu(item: cues, height: 325, isCue: true,),
+                        child: CustomDropdownMenu(item: cues, height: 332, isCue: true,),
                       ),
                     ),
                     Align(
@@ -521,7 +521,7 @@ class _WalkingState extends State<Walking> {
                       child: SizedBox(
                         width: double.infinity,
                         height: 55,
-                        child: CustomDropdownMenu(item: rates, height: 415, isCue: false,)
+                        child: CustomDropdownMenu(item: rates, height: 424, isCue: false,)
                       ),
                     ),
                     Align(

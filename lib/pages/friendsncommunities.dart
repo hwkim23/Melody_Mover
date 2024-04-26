@@ -23,15 +23,31 @@ class _FnCState extends State<FnC> with TickerProviderStateMixin {
   int currentIndex = 0;
   List<List<String>> possibleFriends = [];
   bool isLoading = true;
+  List<bool> isPressed = [];
 
   void getData() async {
     final uid = auth.currentUser?.uid;
     var result = await firestore.collection("users").get();
     for (var doc in result.docs) {
+      Map<dynamic, dynamic> requestsList = {};
+      if ((doc.data()).containsKey("notifications")) {
+        if (doc["notifications"].isNotEmpty) {
+          requestsList = doc["notifications"];
+        }
+      }
       final List<dynamic> friendsList = doc["friends"];
       if (doc.id != uid && !friendsList.contains(uid)) {
         String fullName = doc['first_name'] + " " + doc["last_name"];
         possibleFriends.add([doc.id, fullName]);
+        if (requestsList.isNotEmpty) {
+          if (requestsList["Friend Requests"].contains(uid)) {
+            isPressed.add(true);
+          } else {
+            isPressed.add(false);
+          }
+        } else {
+          isPressed.add(false);
+        }
       }
     }
     setState(() {
@@ -155,19 +171,63 @@ class _FnCState extends State<FnC> with TickerProviderStateMixin {
                                         SizedBox(
                                           height: 35,
                                           width: 90,
-                                          child: OutlinedButton(
-                                            style: OutlinedButton.styleFrom(
+                                          child: FilledButton(
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: !isPressed[index] ? Colors.white : Colors.blue,
                                               minimumSize: Size.zero,
                                               padding: EdgeInsets.zero,
                                               side: const BorderSide(width: 2, color: Colors.blue),
                                               shape: RoundedRectangleBorder(
                                                 borderRadius: BorderRadius.circular(6.0),
+                                              ),
+                                            ),
+                                            onPressed: () async {
+                                              if (isPressed[index] == false) {
+                                                setState(() {
+                                                  isPressed[index] = true;
+                                                });
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text("Request Sent")));
+                                                var result = await firestore.collection('users').doc(possibleFriends[index][0]).get();
+                                                var data = result.data();
+                                                //Map<String, List<String>>
+                                                //"Friend Requests": [...]
+                                                //"Challenges": [...]
+                                                //"Likes": [...]
+                                                //"Comments": [...]
+                                                Map<dynamic, dynamic> notifications = {};
+                                                if (data!.containsKey("Notifications")) {
+                                                  notifications = data["Notifications"];
+                                                }
+                                                Map<dynamic, dynamic> newNotification = {};
+                                                if (notifications.isNotEmpty) {
+                                                  newNotification = notifications;
+                                                  if (newNotification.containsKey("Friend Requests")) {
+                                                    if (!(newNotification["Friend Requests"].contains(auth.currentUser!.uid))) {
+                                                      newNotification["Friend Requests"].add(auth.currentUser!.uid);
+                                                    }
+                                                  } else {
+                                                    List<String> request = [auth.currentUser!.uid];
+                                                    newNotification["Friend Requests"] = request;
+                                                  }
+                                                } else {
+                                                  List<String> request = [auth.currentUser!.uid];
+                                                  newNotification["Friend Requests"] = request;
+                                                }
+                                                firestore.collection('users')
+                                                    .doc(possibleFriends[index][0])
+                                                    .set({
+                                                  'notifications': newNotification
+                                                },SetOptions(merge: true));
+                                              }
+                                            },
+                                            child: Text(
+                                              !isPressed[index] ? "Request" : "Requested",
+                                              style: TextStyle(
+                                                color: !isPressed[index] ? Colors.blue : Colors.white,
+                                                fontWeight: FontWeight.w600
                                               )
                                             ),
-                                            onPressed: () {
-
-                                            },
-                                            child: const Text("Request", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600)),
                                           ),
                                         ),
                                       ],

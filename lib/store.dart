@@ -6,6 +6,7 @@ import 'package:melody_mover/pages/walk.dart';
 
 class Store1 extends ChangeNotifier {
   int selectedIndex = 1;
+  String profileURL = "";
 
   final List<Widget> pages = <Widget>[
     const Walking(),
@@ -27,5 +28,10 @@ class Store1 extends ChangeNotifier {
 
   void inactiveIndex() {
     selectedIndex = -1;
+  }
+
+  void setProfileURL(String url) {
+    profileURL = url;
+    notifyListeners();
   }
 }

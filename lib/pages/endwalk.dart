@@ -833,81 +833,96 @@ class _SharePostState extends State<SharePost> {
                       children: [
                         Container(
                           width: double.infinity,
-                          height: 50,
                           margin: const EdgeInsets.only(bottom: 15),
                           child: TextFormField(
+                            style: const TextStyle(
+                              color: Color(0xffD1EFFF),
+                            ),
+                            cursorColor: const Color(0xffD1EFFF),
                             controller: _titleController,
                             decoration: const InputDecoration(
-                                focusedErrorBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                                    borderSide: BorderSide(
-                                        color: Colors.red
-                                    )
-                                ),
-                                errorBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                                    borderSide: BorderSide(
-                                        color: Colors.red
-                                    )
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                                    borderSide: BorderSide(
-                                        color: Color(0xff008BEE)
-                                    )
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                                    borderSide: BorderSide(
-                                        color: Color(0xff008BEE)
-                                    )
-                                ),
-                                hintText: 'Add Post Title',
-                                filled: true,
-                                fillColor: Color(0xffD1EFFF)
+                              contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10.0),
+                              focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderSide: BorderSide(
+                                      color: Colors.red
+                                  )
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderSide: BorderSide(
+                                      color: Colors.red
+                                  )
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderSide: BorderSide(
+                                      color: Color(0xff008BEE)
+                                  )
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderSide: BorderSide(
+                                      color: Color(0xff008BEE)
+                                  )
+                              ),
+                              hintText: 'Add Post Title',
+                              hintStyle: TextStyle(
+                                color: Color(0xffD1EFFF)
+                              ),
+                              filled: true,
+                              fillColor: Color(0xff008BEE),
                             ),
                             validator: RequiredValidator(errorText: "* Required")
                           ),
                         ),
                         Container(
                           width: double.infinity,
-                          height: 50,
                           margin: const EdgeInsets.only(bottom: 15),
                           child: TextFormField(
-                              controller: _textController,
-                              decoration: const InputDecoration(
-                                  focusedErrorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                      borderSide: BorderSide(
-                                          color: Colors.red
-                                      )
-                                  ),
-                                  errorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                      borderSide: BorderSide(
-                                          color: Colors.red
-                                      )
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                      borderSide: BorderSide(
-                                          color: Color(0xff008BEE)
-                                      )
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                                      borderSide: BorderSide(
-                                          color: Color(0xff008BEE)
-                                      )
-                                  ),
-                                  hintText: 'Add Text or Caption',
-                                  filled: true,
-                                  fillColor: Color(0xffD1EFFF)
+                            maxLines: 5,
+                              style: const TextStyle(
+                                color: Color(0xffD1EFFF),
                               ),
-                              validator: RequiredValidator(errorText: "* Required")
+                              cursorColor: const Color(0xffD1EFFF),
+                            controller: _textController,
+                            decoration: const InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 10.0),
+                              focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderSide: BorderSide(
+                                      color: Colors.red
+                                  )
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderSide: BorderSide(
+                                      color: Colors.red
+                                  )
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderSide: BorderSide(
+                                      color: Color(0xff008BEE)
+                                  )
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderSide: BorderSide(
+                                      color: Color(0xff008BEE)
+                                  )
+                              ),
+                              hintText: 'Add Text or Caption',
+                              hintStyle: TextStyle(
+                                  color: Color(0xffD1EFFF)
+                              ),
+                              filled: true,
+                              fillColor: Color(0xff008BEE)
+                            ),
+                            validator: RequiredValidator(errorText: "* Required")
                           ),
                         ),
-                        Container(
+                        SizedBox(
                           //margin: const EdgeInsets.only(bottom: 10),
                           height: 50,
                           width: double.infinity,

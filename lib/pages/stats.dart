@@ -97,6 +97,18 @@ class _StatisticsState extends State<Statistics> with TickerProviderStateMixin {
       dateList.add(doc['date']);
     }
     setState(() {
+      avgRateList = avgRateList.reversed.toList();
+      avgRatesList = avgRatesList.reversed.toList();
+      avgSpeedList = avgSpeedList.reversed.toList();
+      avgStepList = avgStepList.reversed.toList();
+      avgStepVarList = avgStepVarList.reversed.toList();
+      distanceList = distanceList.reversed.toList();
+      freezesList = freezesList.reversed.toList();
+      stepDurList = stepDurList.reversed.toList();
+      stepDurVarList = stepDurVarList.reversed.toList();
+      stepsList = stepsList.reversed.toList();
+      timeList = timeList.reversed.toList();
+      dateList = dateList.reversed.toList();
       isLoading = false;
       int idx = 0;
       for (var date in dateList) {

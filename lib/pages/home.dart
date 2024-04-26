@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../store.dart';
 import 'challenges.dart';
 
 extension StringExtension on String {
@@ -32,6 +34,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   List<String> docIDs = [];
   List<dynamic> comments = [];
   List<dynamic> likes = [];
+  List<String> profileURLs = [];
   bool isLoading = true;
   List<bool> isLiked = [];
   List<List<bool>> isLikedComment = [];
@@ -53,6 +56,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   }
 
   void getData() async {
+    imageURLs = [];
+    titles = [];
+    captions = [];
+    uploaders = [];
+    dates = [];
+    names = [];
+    firstNames = [];
+    docIDs = [];
+    comments = [];
+    likes = [];
+    isLiked = [];
+    isLikedComment = [];
+    friendsList = [];
+    profileURLs = [];
     uid = auth.currentUser!.uid;
     var result = await firestore.collection("posts").orderBy('date', descending: true).get();
     var friendResult = await firestore.collection("users").get();
@@ -93,11 +110,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         for (var userDoc in nameData.docs) {
           if (userDoc.id == uid) {
             userFullName = userDoc["first_name"] + " " + userDoc["last_name"];
+            if (userDoc.data().containsKey("profileURL")) {
+              context.read<Store1>().setProfileURL(userDoc["profileURL"]);
+            }
           }
           if (userDoc.id == doc["uploader"]) {
             String fullName = userDoc["first_name"] + " " + userDoc["last_name"];
             names.add(fullName);
             firstNames.add(userDoc["first_name"]);
+            if (userDoc.data().containsKey("profileURL")) {
+              profileURLs.add(userDoc["profileURL"]);
+            } else {
+              profileURLs.add("");
+            }
           }
         }
       }
@@ -212,7 +237,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                         children: [
                                           Container(
                                             margin: const EdgeInsets.only(right: 15),
-                                            child: const Icon(Icons.account_circle)
+                                            child: profileURLs[index].isNotEmpty ? CircleAvatar(
+                                              backgroundColor: Colors.white,
+                                              radius: 20, // Image radius
+                                              backgroundImage: NetworkImage(profileURLs[index]),
+                                            ) : const Icon(Icons.account_circle)
                                           ),
                                           Text(names[index], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600))
                                         ],
@@ -363,7 +392,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           right: 25,
           child: FloatingActionButton(
             onPressed: () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Challenges()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const Challenges()));
             },
             elevation: 5,
             backgroundColor: const Color(0xff0496FF),
@@ -504,6 +533,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                           const SnackBar(content: Text("Successfully commented")));
                                     });
                                     setState(() {
+                                      isLoading = true;
+                                      getData();
                                       showCommentOverlay = false;
                                     });
                                   }
@@ -521,7 +552,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             ),
           ),
         ),
-        Visibility(
+        titles.isEmpty ? Container() : Visibility(
           visible: showCommentsOverlay,
           child: Positioned(
             bottom: 0,
@@ -532,7 +563,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             ),
           ),
         ),
-        Visibility(
+        titles.isEmpty ? Container() : Visibility(
           visible: showCommentsOverlay,
           child: Positioned(
             bottom: 0,
@@ -643,7 +674,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                       setState(() {
                                                         isLikedComment[selectedIndex][index] = !isLikedComment[selectedIndex][index];
                                                       });
-                                                      var result = await firestore.collection('posts').doc(docIDs[index]).get();
+                                                      var result = await firestore.collection('posts').doc(docIDs[selectedIndex]).get();
                                                       var data = result.data();
                                                       List<dynamic> comments = data?['comments'];
                                                       if (isLikedComment[selectedIndex][index]) {
@@ -652,7 +683,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                         comments[index]['likes'].remove(uid);
                                                       }
                                                       firestore.collection('posts')
-                                                          .doc(docIDs[index])
+                                                          .doc(docIDs[selectedIndex])
                                                           .set({
                                                         'comments': comments
                                                       },SetOptions(merge: true));
@@ -660,7 +691,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                     child: !isLikedComment[selectedIndex][index] ? const Icon(Icons.favorite_border, color: Colors.blue,) : const Icon(Icons.favorite, color: Colors.redAccent,),
                                                   ),
                                                 ),
-                                                SizedBox(
+                                                /*SizedBox(
                                                   height: 35,
                                                   child: FilledButton(
                                                     style: ButtonStyle(
@@ -691,7 +722,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                     },
                                                     child: const Icon(Icons.subdirectory_arrow_left_outlined, color: Colors.blue),
                                                   ),
-                                                ),
+                                                ),*/
                                               ],
                                             ),
                                           )
