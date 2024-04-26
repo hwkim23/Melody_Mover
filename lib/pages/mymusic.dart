@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../appbar.dart';
@@ -21,8 +23,10 @@ class _MyMusicState extends State<MyMusic> {
   SpotifyApi? spotifyApi;
   List<Track>? _tracks; // Assuming Track is the correct type
   AudioPlayer audioPlayer = AudioPlayer();
-  String clientId = "d73794ac45a944ba8702d084ce52280c";
-  String clientSecret = "da49d565cbbf48f597dc8fd5f6984303";
+  String clientId = "";
+  String clientSecret = "";
+  final firestore = FirebaseFirestore.instance;
+  final FirebaseAuth auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -32,7 +36,11 @@ class _MyMusicState extends State<MyMusic> {
   }
 
   Future<void> _initializeSpotify() async {
-
+    var resultDoc = await firestore.collection("spotifyapi").get();
+    for (var doc in resultDoc.docs) {
+      clientId = doc["clientId"];
+      clientSecret = doc["clientSecret"];
+    }
     final accessTokenResult = await SpotifyAuth().getAccessToken();
     if (accessTokenResult != null &&
         accessTokenResult['access_token'] != null) {
