@@ -460,7 +460,7 @@ class _WalkingState extends State<Walking> {
                                   isStarted = false;
                                 }
                               } else if (value != 0) {
-                                wpm = (((stepCount) / value!) * 60).round();
+                                wpm = (((stepCount-1.5) / value!) * 60).round();
                               }
                               finalStepCount = stepCount.toString();
                               return Text(
