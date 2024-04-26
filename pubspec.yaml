@@ -65,6 +65,8 @@ dependencies:
   oauth2_client: ^3.0.0
   http: ^1.2.0
   just_audio: ^0.9.6
+  cached_network_image: ^3.3.1
+  quiver: ^3.2.1
 
 flutter_launcher_icons:
   image_path_android: "assets/image/icon-710x599-android.png"

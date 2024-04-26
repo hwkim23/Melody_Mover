@@ -560,24 +560,34 @@ class _RegisterLastState extends State<RegisterLast> {
   final firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
+  final List<String> emptyList = [];
 
   void signup() async {
-    final uid = _auth.currentUser?.uid;
     if (_formkey.currentState!.validate()) {
-      await _auth
-          .createUserWithEmailAndPassword(
-          email: _emailController.text, password: _passwordController.text)
-          .whenComplete(() => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const RegisterSuccess())));
-      await firestore.collection('users').add({
-        "email" : _emailController.text,
-        "first_name" : _nameController.text.contains(" ") ? _nameController.text.split(" ")[0] : _nameController.text,
-        "last_name" : _nameController.text.contains(" ") ? _nameController.text.split(" ")[1] : "",
-        "user_name" : _userNameController.text,
-        "userID" : uid
-      });
-      await _auth
-          .signInWithEmailAndPassword(
-          email: _emailController.text, password: _passwordController.text);
+      try {
+        await _auth
+            .createUserWithEmailAndPassword(
+            email: _emailController.text,
+            password: _passwordController.text
+        );
+      } catch (e) { }
+      try {
+        await _auth
+            .signInWithEmailAndPassword(
+            email: _emailController.text,
+            password: _passwordController.text
+        );
+      } catch (e) { }
+      final uid = _auth.currentUser?.uid;
+      try {
+        await firestore.collection('users').doc(uid).set({
+          "email" : _emailController.text,
+          "first_name" : _nameController.text.contains(" ") ? _nameController.text.split(" ")[0] : _nameController.text,
+          "last_name" : _nameController.text.contains(" ") ? _nameController.text.split(" ")[1] : "",
+          "user_name" : _userNameController.text,
+          "friends" : emptyList
+        });
+      } catch (e) { }
     }
   }
 
@@ -697,6 +707,7 @@ class _RegisterLastState extends State<RegisterLast> {
                       signup();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Registered Successfully")));
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const RegisterSuccess()));
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Error caused during registration")));
@@ -721,7 +732,7 @@ class RegisterSuccess extends StatefulWidget {
 }
 
 class _RegisterSuccessState extends State<RegisterSuccess> {
-  @override
+  /*@override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
@@ -729,7 +740,7 @@ class _RegisterSuccessState extends State<RegisterSuccess> {
     _passwordController.dispose();
     _rePasswordController.dispose();
     super.dispose();
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {

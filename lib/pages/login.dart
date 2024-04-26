@@ -20,12 +20,22 @@ class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  @override
+  void dispose() {
+    super.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+  }
+
   void logIn() async {
     if (_formkey.currentState!.validate()) {
-      await _auth
-        .signInWithEmailAndPassword(
-          email: _emailController.text, password: _passwordController.text)
-          .whenComplete(() =>  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainPage())));
+      try {
+        await _auth
+            .signInWithEmailAndPassword(
+            email: _emailController.text,
+            password: _passwordController.text
+        );
+      } catch (e) { }
     }
   }
 
@@ -178,14 +188,26 @@ class _LoginState extends State<Login> {
                           borderRadius: BorderRadius.all(Radius.circular(10))
                       )
                   ),
-                  onPressed: () {
-                    try {
-                      logIn();
+                  onPressed: () async {
+                    if (_formkey.currentState!.validate()) {
+                      try {
+                        await _auth
+                            .signInWithEmailAndPassword(
+                            email: _emailController.text,
+                            password: _passwordController.text
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Error caused during login")));
+                      }
+                    }
+                    if (_auth.currentUser?.uid == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Logged In Successfully")));
-                    } catch (e) {
+                          const SnackBar(content: Text("Email or password is incorrect")));
+                    } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Error caused during login")));
+                          const SnackBar(content: Text("Logged In Successfully")));
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainPage()));
                     }
                   },
                   child: const Text("Log In", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
