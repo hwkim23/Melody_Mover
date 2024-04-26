@@ -21,8 +21,8 @@ class _MyMusicState extends State<MyMusic> {
   SpotifyApi? spotifyApi;
   List<Track>? _tracks; // Assuming Track is the correct type
   AudioPlayer audioPlayer = AudioPlayer();
-  String clientId = "";
-  String clientSecret = "";
+  String clientId = "d73794ac45a944ba8702d084ce52280c";
+  String clientSecret = "da49d565cbbf48f597dc8fd5f6984303";
 
   @override
   void initState() {
