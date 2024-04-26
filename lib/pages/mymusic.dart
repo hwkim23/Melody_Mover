@@ -33,7 +33,7 @@ class _MyMusicState extends State<MyMusic> {
 
   Future<void> _initializeSpotify() async {
 
-    final accessTokenResult = await SpotifyAuth.getAccessToken();
+    final accessTokenResult = await SpotifyAuth().getAccessToken();
     if (accessTokenResult != null &&
         accessTokenResult['access_token'] != null) {
       spotifyApi = SpotifyApi(SpotifyApiCredentials(
