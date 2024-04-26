@@ -22,7 +22,7 @@ class SpotifyAuth {
   final FirebaseAuth auth = FirebaseAuth.instance;
 
   Future<Map<String, dynamic>?> getAccessToken() async {
-    var resultDoc = await firestore.collection("users").get();
+    var resultDoc = await firestore.collection("spotifyapi").get();
     for (var doc in resultDoc.docs) {
       clientId = doc["clientId"];
       clientSecret = doc["clientSecret"];
