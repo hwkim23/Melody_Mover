@@ -2,6 +2,13 @@
 
 A smartphone-based auditory cueing solution for Parkinson’s patients struggling with mobility.
 
+| Cue choosing | Step tracking | Community | Statistics |
+|:---:|:---:|:---:|:---:|
+| <img width="387" height="789" alt="choosing cue" src="https://github.com/user-attachments/assets/604054d3-dbd9-4cfb-bac8-c91369783b37" /> | <img width="380" height="787" alt="step tracking" src="https://github.com/user-attachments/assets/221180fd-350a-4012-b97a-576aaa6000f2" /> | <img width="379" height="795" alt="community" src="https://github.com/user-attachments/assets/6d0fdf1b-e789-4d30-9500-31a943264c40" /> | <img width="380" height="790" alt="statistics" src="https://github.com/user-attachments/assets/0769c87b-c50f-4ccb-b241-d27a38a89692" /> |
+
+
+
+
 Objective:
 
 Patients with Parkinson’s disease have limited accessible, self-operable, non-pharmacologic solutions available to address their progressive mobility concerns. Our objective is to meet this need and demonstrate a 50% increase in daily steps taken through a mobile phone application that provides intelligent auditory cueing to reduce gait abnormalities and freezing and provides a virtual community to encourage continued exercise.
