@@ -19,6 +19,25 @@ Cueing is not only beneficial in overcoming freezing but may lead to greater ben
 European guidelines strongly recommend cueing for the treatment of PD. A review of studies including 324 subjects demonstrated decreased freezing and improved gait timing with cueing. Despite these benefits, cueing strategies are often DIY and unsophisticated. Patients may use walkers with laser-projected lines, metronomes, or homemade playlists to cue. Recent studies have demonstrated benefits with more sophisticated and nuanced cues. Action-relevant cues, such as the sound of a footfall, are more effective than standard metronome cues. Intelligent cues, timed to rescue freezing or anticipate it, are more effective than continuous cues. Custom cues, that preserve the biological variability of interstride intervals, are more likely to prevent falls than fixed cues4. Given these findings, there is an opportunity to develop an improved cueing platform for PD patients to overcome freezing and facilitate movement and exercise.
 
 
+## How the cueing engine works
+
+The app cues walking rhythm three ways — metronome, footfall audio, verbal
+prompt, or haptic pulse — and can either hold a fixed rate or adapt to the
+patient in real time.
+
+In Auto mode, cadence is recomputed every five seconds from the platform
+step stream and fed to the metronome as a new BPM, so the cue follows the
+patient rather than forcing a pace they can't hold.
+
+## Detecting gait freezes
+
+Freezing of gait is the symptom this app exists for: a patient stops mid-
+stride and can't restart. The session tracks the platform's pedestrian
+status and counts a freeze on the transition out of walking, guarded by a
+flag so one long stall isn't counted repeatedly.
+
+Freeze count, per-minute step counts, and distance samples are carried into
+the session summary.
 
 
 # Usage & Installation
